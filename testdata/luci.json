@@ -1,0 +1,51 @@
+{
+  "Name": "luci",
+  "Sections": [{
+    "Type": "core",
+    "Name": "main",
+    "Index": 0,
+    "Options": {
+      "lang":         {"Name": "lang",        "Values": ["auto"]},
+      "mediaurlbase": {"Name": "mediaurlbase","Values": ["/luci-static/bootstrap"]},
+      "resourcebase": {"Name": "resourcebase","Values": ["/luci-static/resources"]}
+    }
+  },{
+    "Type": "extern",
+    "Name": "flash_keep",
+    "Index": 1,
+    "Options": {
+      "uci":      {"Name": "uci",     "Values": ["/etc/config/"]},
+      "dropbear": {"Name": "dropbear","Values": ["/etc/dropbear/"]},
+      "openvpn":  {"Name": "openvpn", "Values": ["/etc/openvpn/"]},
+      "passwd":   {"Name": "passwd",  "Values": ["/etc/passwd"]},
+      "opkg":     {"Name": "opkg",    "Values": ["/etc/opkg.conf"]},
+      "firewall": {"Name": "firewall","Values": ["/etc/firewall.user"]},
+      "uploads":  {"Name": "uploads", "Values": ["/lib/uci/upload/"]}
+    }
+  },{
+    "Type": "internal",
+    "Name": "languages",
+    "Index": 2,
+    "Options": {}
+  },{
+    "Type": "internal",
+    "Name": "sauth",
+    "Index": 3,
+    "Options": {
+      "sessionpath": {"Name": "sessionpath","Values": ["/tmp/luci-sessions"]},
+      "sessiontime": {"Name": "sessiontime","Values": ["3600"]}
+    }
+  },{
+    "Type": "internal",
+    "Name": "ccache",
+    "Index": 4,
+    "Options": {
+      "enable": {"Name": "enable","Values": ["1"]}
+    }
+  },{
+    "Type": "internal",
+    "Name": "themes",
+    "Index": 5,
+    "Options": {}
+  }]
+}

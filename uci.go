@@ -14,181 +14,113 @@
 package uci
 
 import (
-	"bufio"
-	"bytes"
 	"fmt"
-	"io"
-	"strings"
-	"unicode"
+	"io/ioutil"
+	"path/filepath"
+	"sync"
+
+	"github.com/digineo/go-uci/parser"
+	"github.com/digineo/go-uci/uci"
 )
 
-// Config represents a file in UCI. It consists of sections.
-type Config struct {
-	Name     string
-	Sections []*Section
-}
+var defaultRoot = NewRootDir("/etc/config")
 
-// A Section represents a group of options in UCI. It may be named or
-// unnamed. In the latter case, its synthetic name is constructed from
-// the section type and index (e.g. "@system[0]").
-//
-// Sections consist of Options.
-type Section struct {
-	Type    string
-	name    string
-	Index   int
-	Options map[string]*Option
-}
-
-// Name returns a sections name. If it is unnamed, a synthetic name is
-// constructed from the type and index (e.g. "@system[0]").
-func (s *Section) Name() string {
-	if s.name == "" {
-		return fmt.Sprintf("@%s[%d]", s.Type, s.Index)
-	}
-	return s.name
-}
-
-// An Option is the key to one or more values. Multiple values indicate
-// a list option.
-type Option struct {
-	Name   string
-	Values []string
-}
-
-// A ParseError is emitted when parsing a UCI config file encounters
-// unexpected tokens.
-type ParseError struct {
+// ErrConfigAlreadyLoaded is returned by LoadConfig, if the given config
+// name is already present.
+type ErrConfigAlreadyLoaded struct {
 	name string
-	line int
-	msg  string
 }
 
-func (err *ParseError) Error() string {
-	return fmt.Sprintf("cannot parse %s:%d: %s", err.name, err.line, err.msg)
+func (err ErrConfigAlreadyLoaded) Error() string {
+	return fmt.Sprintf("%s already loaded", err.name)
 }
 
-func (err *ParseError) withMessage(format string, v ...interface{}) error {
-	err.msg = fmt.Sprintf(format, v...)
-	return err
+// RootDir defines the base directory for UCI config files. The default
+// on an OpenWRT device points to `/etc/config`.
+type RootDir interface {
+	// LoadConfig reads a config file into memory and returns nil. If the
+	// config is already loaded, ErrConfigAlreadyLoaded is returned. Errors
+	// reading the config file are returned verbatim.
+	//
+	// You don't need to explicitly call LoadConfig(): Accessing configs
+	// (and their sections) via Get, Set, Add, Delete, DeleteAll will
+	// load missing files automatically.
+	LoadConfig(name string) error
+
+	// Commit writes all changes back to the system.
+
+	// Note: this is not transaction safe. If, for whatever reason, the
+	// writing of any file fails, the succeeding files are left untouched
+	// while the preceeding files are not reverted.
+	Commit() error
+
+	// Revert undoes any changes. This clears the internal memory and does
+	// not access the file system.
+	Revert()
 }
 
-func loadConfig(name string, r io.Reader) (*Config, error) {
-	var (
-		cfg  = &Config{Name: name}    // return value
-		sec  *Section                 // current section
-		perr = ParseError{name: name} // error template
-	)
+type rootDir struct {
+	root    string
+	configs map[string]*uci.Config
 
-	s := bufio.NewScanner(r)
-	for ; s.Scan(); perr.line++ {
-		switch line := strings.TrimSpace(s.Text()); {
-		case strings.HasPrefix(line, "config"):
-			if sec != nil {
-				cfg.Sections = append(cfg.Sections, sec)
-			}
-			typ, name, err := parseSection(line, &perr)
-			if err != nil {
-				return nil, err
-			}
-			sec = &Section{
-				Type:    typ,
-				name:    name,
-				Index:   len(cfg.Sections),
-				Options: make(map[string]*Option),
-			}
-
-		case strings.HasPrefix(line, "option"):
-			fallthrough
-		case strings.HasPrefix(line, "list"):
-			if sec == nil {
-				return nil, perr.withMessage("unexpected option without section")
-			}
-			name, value, err := parseOption(line, &perr)
-			if err != nil {
-				return nil, err
-			}
-			if opt, exists := sec.Options[name]; exists {
-				opt.Values = append(opt.Values, value)
-			} else {
-				sec.Options[name] = &Option{
-					Name:   name,
-					Values: []string{value},
-				}
-			}
-		default:
-			continue
-		}
-	}
-	if err := s.Err(); err != nil {
-		return nil, err
-	}
-
-	if sec != nil {
-		cfg.Sections = append(cfg.Sections, sec)
-	}
-	return cfg, nil
+	sync.RWMutex
 }
 
-func parseSection(line string, perr *ParseError) (typ, name string, err error) {
-	f := strings.Fields(line)
-	l := len(f)
-	if l < 2 || l > 3 {
-		err = perr.withMessage("expected 2-3 fields, got %v", f)
-		return
-	}
-	if f[0] != "config" {
-		err = perr.withMessage(`expected "config", found %q`, f[0])
-		return
-	}
-	if l == 2 {
-		return f[1], "", nil
-	}
-	return f[1], unquote(f[2]), nil
+var _ RootDir = (*rootDir)(nil)
+
+// NewRootDir constructs new RootDir pointing to root.
+func NewRootDir(root string) RootDir {
+	return &rootDir{root: root}
 }
 
-func parseOption(line string, perr *ParseError) (name, value string, err error) {
-	var havePrefix, haveName bool
-	var buf bytes.Buffer
-	for _, r := range line {
-		if unicode.IsSpace(r) {
-			switch {
-			case !havePrefix:
-				havePrefix = true
-				prefix := buf.String()
-				if prefix != "option" && prefix != "list" {
-					err = perr.withMessage(`expected "option" or "list", found %q`, prefix)
-					return
-				}
-				buf.Reset()
-				continue
-			case !haveName:
-				haveName = true
-				name = buf.String()
-				buf.Reset()
-				continue
-			}
-		}
-		if r == '\'' {
-			if !havePrefix {
-				err = perr.withMessage(`unexpected ' while parsing prefix`)
-				return
-			}
-			if !haveName {
-				err = perr.withMessage(`unexpected ' while parsing name`)
-				return
-			}
-		}
-		buf.WriteRune(r)
+// LoadConfig delegates to the default root. See RootDir for details.
+func LoadConfig(name string) error { return defaultRoot.LoadConfig(name) }
+
+// Commit delegates to the default root. See RootDir for details.
+func Commit() error { return defaultRoot.Commit() }
+
+// Revert delegates to the default root. See RootDir for details.
+func Revert() { defaultRoot.Revert() }
+
+func (root *rootDir) LoadConfig(name string) error {
+	root.RLock()
+	var exists bool
+	if root.configs != nil {
+		_, exists = root.configs[name]
 	}
-	value = unquote(buf.String())
-	return
+	root.RUnlock()
+	if exists {
+		return &ErrConfigAlreadyLoaded{name}
+	}
+
+	root.Lock()
+	defer root.Unlock()
+
+	body, err := ioutil.ReadFile(filepath.Join(root.root, name))
+	if err != nil {
+		return err
+	}
+	cfg, err := parser.Parse(name, string(body))
+	if err != nil {
+		return err
+	}
+
+	if root.configs == nil {
+		root.configs = make(map[string]*uci.Config)
+	}
+	root.configs[name] = cfg
+	return nil
 }
 
-func unquote(s string) string {
-	if l := len(s); l > 2 &&
-		(s[0] == '\'' && s[l-1] == '\'' || s[0] == '"' && s[l-1] == '"') {
-		return s[1 : l-1]
-	}
-	return s
+func (root *rootDir) Commit() error {
+	root.Lock()
+	defer root.Unlock()
+
+	return nil
+}
+
+func (root *rootDir) Revert() {
+	root.Lock()
+	root.configs = nil
+	root.Unlock()
 }

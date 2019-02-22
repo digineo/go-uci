@@ -1,0 +1,70 @@
+{
+  "Name": "system",
+  "Sections": [
+    {
+      "Type": "system",
+      "Name": "",
+      "Index": 0,
+      "Options": {
+        "hostname": {
+          "Name": "hostname",
+          "Values": ["testhost"]
+        },
+        "log_size": {
+          "Name": "log_size",
+          "Values": ["64"]
+        },
+        "timezone": {
+          "Name": "timezone",
+          "Values": ["UTC"]
+        },
+        "ttylogin": {
+          "Name": "ttylogin",
+          "Values": ["0"]
+        },
+        "urandom_seed": {
+          "Name": "urandom_seed",
+          "Values": ["0"]
+        }
+      }
+    },
+    {
+      "Type": "timeserver",
+      "Name": "ntp",
+      "Index": 1,
+      "Options": {
+        "enable_server": {
+          "Name": "enable_server",
+          "Values": ["0"]
+        },
+        "enabled": {
+          "Name": "enabled",
+          "Values": ["1"]
+        },
+        "server": {
+          "Name": "server",
+          "Values": ["0.lede.pool.ntp.org","1.lede.pool.ntp.org","2.lede.pool.ntp.org","3.lede.pool.ntp.org"]
+        }
+      }
+    },
+    {
+      "Type": "gpio_switch",
+      "Name": "poe_passthrough",
+      "Index": 2,
+      "Options": {
+        "gpio_pin": {
+          "Name": "gpio_pin",
+          "Values": ["0"]
+        },
+        "name": {
+          "Name": "name",
+          "Values": ["PoE Passthrough"]
+        },
+        "value": {
+          "Name": "value",
+          "Values": ["0"]
+        }
+      }
+    }
+  ]
+}
