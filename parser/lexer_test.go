@@ -29,6 +29,8 @@ func TestLexer(t *testing.T) {
 		name, input string
 		expected    []item
 	}{
+		{"empty1", "", []item{}},
+		{"empty2", "  \n\t\n\n \n ", []item{}},
 		{"simple", simple, []item{
 			itemConfig.mk("config"), itemIdent.mk("sectiontype"), itemString.mk("sectionname"),
 			itemOption.mk("option"), itemIdent.mk("optionname"), itemString.mk("optionvalue"),
