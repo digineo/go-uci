@@ -57,6 +57,25 @@ type Tree interface {
 	// Revert undoes any changes. This clears the internal memory and does
 	// not access the file system.
 	Revert()
+
+	// Get retrieves (all) values for a fully qualified option, and a
+	// boolean indicating whether the config file and the config section
+	// within exists.
+	Get(config, section, option string) ([]string, bool)
+
+	// Set replaces the fully qualified option with the given values. It
+	// returns whether the config file and section exists. For new files
+	// and sections, you first need to initialize them with NewSection().
+	Set(config, section, option string, values ...string) bool
+
+	// Del removes a fully qualified option.
+	Del(config, section, option string)
+
+	// NewSection adds a new config section.
+	NewSection(config, section, typ string)
+
+	// DelSection remove a config section and its options.
+	DelSection(config, section string)
 }
 
 type tree struct {
@@ -81,6 +100,25 @@ func Commit() error { return defaultTree.Commit() }
 
 // Revert delegates to the default tree. See Tree for details.
 func Revert() { defaultTree.Revert() }
+
+// Get delegates to the default tree. See Tree for details.
+func Get(config, section, option string) ([]string, bool) {
+	return defaultTree.Get(config, section, option)
+}
+
+// Set delegates to the default tree. See Tree for details.
+func Set(config, section, option string, values ...string) bool {
+	return defaultTree.Set(config, section, option, values...)
+}
+
+// Del delegates to the default tree. See Tree for details.
+func Del(config, section, option string) { defaultTree.Del(config, section, option) }
+
+// NewSection delegates to the default tree. See Tree for details.
+func NewSection(config, section, typ string) { defaultTree.NewSection(config, section, typ) }
+
+// DelSection delegates to the default tree. See Tree for details.
+func DelSection(config, section string) { defaultTree.DelSection(config, section) }
 
 func (t *tree) LoadConfig(name string) error {
 	t.RLock()
@@ -123,4 +161,33 @@ func (t *tree) Revert() {
 	t.Lock()
 	t.configs = nil
 	t.Unlock()
+}
+
+func (t *tree) Get(config, section, option string) ([]string, bool) {
+	t.RLock()
+	defer t.RUnlock()
+
+	return nil, false
+}
+
+func (t *tree) Set(config, section, option string, values ...string) bool {
+	t.Lock()
+	defer t.Unlock()
+
+	return false
+}
+
+func (t *tree) Del(config, section, option string) {
+	t.Lock()
+	defer t.Unlock()
+}
+
+func (t *tree) NewSection(config, section, typ string) {
+	t.Lock()
+	defer t.Unlock()
+}
+
+func (t *tree) DelSection(config, section string) {
+	t.Lock()
+	defer t.Unlock()
 }
