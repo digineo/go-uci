@@ -23,7 +23,7 @@ import (
 	"github.com/digineo/go-uci/uci"
 )
 
-var defaultRoot = NewRootDir("/etc/config")
+var defaultTree = NewTree("/etc/config")
 
 // ErrConfigAlreadyLoaded is returned by LoadConfig, if the given config
 // name is already present.
@@ -35,9 +35,9 @@ func (err ErrConfigAlreadyLoaded) Error() string {
 	return fmt.Sprintf("%s already loaded", err.name)
 }
 
-// RootDir defines the base directory for UCI config files. The default
+// Tree defines the base directory for UCI config files. The default
 // on an OpenWRT device points to `/etc/config`.
-type RootDir interface {
+type Tree interface {
 	// LoadConfig reads a config file into memory and returns nil. If the
 	// config is already loaded, ErrConfigAlreadyLoaded is returned. Errors
 	// reading the config file are returned verbatim.
@@ -48,7 +48,7 @@ type RootDir interface {
 	LoadConfig(name string) error
 
 	// Commit writes all changes back to the system.
-
+	//
 	// Note: this is not transaction safe. If, for whatever reason, the
 	// writing of any file fails, the succeeding files are left untouched
 	// while the preceeding files are not reverted.
@@ -59,44 +59,44 @@ type RootDir interface {
 	Revert()
 }
 
-type rootDir struct {
-	root    string
+type tree struct {
+	dir     string
 	configs map[string]*uci.Config
 
 	sync.RWMutex
 }
 
-var _ RootDir = (*rootDir)(nil)
+var _ Tree = (*tree)(nil)
 
-// NewRootDir constructs new RootDir pointing to root.
-func NewRootDir(root string) RootDir {
-	return &rootDir{root: root}
+// NewTree constructs new RootDir pointing to root.
+func NewTree(root string) Tree {
+	return &tree{dir: root}
 }
 
-// LoadConfig delegates to the default root. See RootDir for details.
-func LoadConfig(name string) error { return defaultRoot.LoadConfig(name) }
+// LoadConfig delegates to the default tree. See Tree for details.
+func LoadConfig(name string) error { return defaultTree.LoadConfig(name) }
 
-// Commit delegates to the default root. See RootDir for details.
-func Commit() error { return defaultRoot.Commit() }
+// Commit delegates to the default tree. See Tree for details.
+func Commit() error { return defaultTree.Commit() }
 
-// Revert delegates to the default root. See RootDir for details.
-func Revert() { defaultRoot.Revert() }
+// Revert delegates to the default tree. See Tree for details.
+func Revert() { defaultTree.Revert() }
 
-func (root *rootDir) LoadConfig(name string) error {
-	root.RLock()
+func (t *tree) LoadConfig(name string) error {
+	t.RLock()
 	var exists bool
-	if root.configs != nil {
-		_, exists = root.configs[name]
+	if t.configs != nil {
+		_, exists = t.configs[name]
 	}
-	root.RUnlock()
+	t.RUnlock()
 	if exists {
 		return &ErrConfigAlreadyLoaded{name}
 	}
 
-	root.Lock()
-	defer root.Unlock()
+	t.Lock()
+	defer t.Unlock()
 
-	body, err := ioutil.ReadFile(filepath.Join(root.root, name))
+	body, err := ioutil.ReadFile(filepath.Join(t.dir, name))
 	if err != nil {
 		return err
 	}
@@ -105,22 +105,22 @@ func (root *rootDir) LoadConfig(name string) error {
 		return err
 	}
 
-	if root.configs == nil {
-		root.configs = make(map[string]*uci.Config)
+	if t.configs == nil {
+		t.configs = make(map[string]*uci.Config)
 	}
-	root.configs[name] = cfg
+	t.configs[name] = cfg
 	return nil
 }
 
-func (root *rootDir) Commit() error {
-	root.Lock()
-	defer root.Unlock()
+func (t *tree) Commit() error {
+	t.Lock()
+	defer t.Unlock()
 
 	return nil
 }
 
-func (root *rootDir) Revert() {
-	root.Lock()
-	root.configs = nil
-	root.Unlock()
+func (t *tree) Revert() {
+	t.Lock()
+	t.configs = nil
+	t.Unlock()
 }

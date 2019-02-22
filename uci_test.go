@@ -34,11 +34,11 @@ func TestLoadConfig(t *testing.T) {
 
 	for _, name := range []string{"emptyfile", "emptysection", "luci", "system", "ucitrack"} {
 		t.Run(name, func(t *testing.T) {
-			r := NewRootDir("testdata")
+			r := NewTree("testdata")
 			err := r.LoadConfig(name)
 			assert.NoError(err)
 
-			actual := r.(*rootDir).configs[name]
+			actual := r.(*tree).configs[name]
 
 			if os.Getenv("DUMP_JSON") == "1" {
 				json.NewEncoder(os.Stderr).Encode(actual)

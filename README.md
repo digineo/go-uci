@@ -27,7 +27,7 @@ TODO: add real examples
 import "github.com/digineo/go-uci"
 
 func main() {
-	uci := uci.NewRootDir("./config") // defaults to /etc/config
+	uci := uci.NewTree("./config") // defaults to /etc/config
 	uci.Get("network", "lan", "ifname") //=> []string{"eth0.1"}
 	uci.Set("network", "lan", "ipaddr", "192.168.7.1")
 	uci.Commit() // or uci.Revert()
