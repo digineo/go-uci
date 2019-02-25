@@ -23,35 +23,61 @@ type lexer struct {
 	start int       // start position of the current item
 	pos   int       // current position in the input
 	width int       // width of last rune read from input
+	state stateFn   // current state (see *lexer.nextItem())
 	items chan item // channel of scanned items
 }
 
 // lex starts the lexer
 //
-// https://talks.golang.org/2011/lex.slide#23, ignoring #41 because of
-// note in #39
-func lex(name, input string) (*lexer, chan item) {
-	l := &lexer{
+// https://talks.golang.org/2011/lex.slide#41
+func lex(name, input string) *lexer {
+	return &lexer{
 		name:  name,
 		input: input,
-		items: make(chan item, 3),
+		state: lexKeyword,
+		items: make(chan item, 2),
 	}
-	go l.run()
-	return l, l.items
 }
 
-// run lexes the input by executing state functions until the state is
-// nil.
+// nextItem returns the next item from the input
 //
-// https://talks.golang.org/2011/lex.slide#24
-func (l *lexer) run() {
-	for state := lexKeyword; state != nil; {
-		state = state(l)
+// https://talks.golang.org/2011/lex.slide#41
+func (l *lexer) nextItem() item {
+	for {
+		select {
+		case it, ok := <-l.items:
+			if ok {
+				return it
+			}
+			return l.eof()
+
+		default:
+			s := l.state(l)
+			if s == nil {
+				l.stop()
+				return l.eof()
+			}
+			l.state = s
+		}
 	}
-	close(l.items) // No more tokens will be delivered.
 }
 
-// emit a token
+// stop closes the item channel, so that nextItem will (eventually)
+// return an EOF token.
+func (l *lexer) stop() {
+	if l.items == nil {
+		return
+	}
+	close(l.items)
+	l.items = nil
+}
+
+// eof directly returns an EOF token.
+func (l *lexer) eof() item {
+	return item{itemEOF, l.input[l.start:l.pos], l.pos}
+}
+
+// emit emits a token
 //
 // https://talks.golang.org/2011/lex.slide#25
 func (l *lexer) emit(t itemType) {
@@ -123,6 +149,7 @@ func (l *lexer) acceptRun(valid string) {
 	l.backup()
 }
 
+// acceptIdent consumes an UCI identifier [_a-zA-Z].
 func (l *lexer) acceptIdent() {
 	for {
 		r := l.next()
@@ -133,6 +160,7 @@ func (l *lexer) acceptIdent() {
 	}
 }
 
+// consumeWhitespace consumes (and ignores) space and tab characters.
 func (l *lexer) consumeWhitespace() {
 	for isSpace(l.peek()) {
 		l.next()

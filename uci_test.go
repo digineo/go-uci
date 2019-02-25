@@ -9,11 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func opt(name string, vs ...string) *option {
-	_ = jsonConfig{}
-	return newOption(name, vs)
-}
-
 func loadExpected(t *testing.T, name string) *config {
 	t.Helper()
 

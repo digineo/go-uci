@@ -64,10 +64,8 @@ func testLexer(t *testing.T, name, input string, expected []item) {
 		defer fmt.Println("")
 	}
 
-	_, ch := lex(name, input)
-	var i int
-
-	for it := range ch {
+	l := lex(name, input)
+	for it, i := l.nextItem(), 0; it.typ != itemEOF; it, i = l.nextItem(), i+1 {
 		if dump {
 			fmt.Print(it, " ")
 		}
@@ -80,7 +78,5 @@ func testLexer(t *testing.T, name, input string, expected []item) {
 			t.Errorf("token %d, expected %s, got %s", i, ex, it)
 			return
 		}
-
-		i++
 	}
 }

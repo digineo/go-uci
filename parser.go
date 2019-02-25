@@ -5,16 +5,19 @@ import (
 	"fmt"
 )
 
-// parse tries to parse a named input string into a Config object.
+// parse tries to parse a named input string into a config object.
+//
+// TODO: this should use a similar design to the lexer.
 func parse(name, input string) (*config, error) {
-	_, ch := lex(name, input)
-
 	cfg := newConfig(name)
 	var sec *section
 	var opt *option
 	inList := false
 
-	for it := range ch {
+	l := lex(name, input)
+	defer l.stop()
+
+	for it := l.nextItem(); it.typ != itemEOF; it = l.nextItem() {
 		switch it.typ {
 		case itemPackage:
 			// ignore
