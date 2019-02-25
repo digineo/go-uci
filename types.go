@@ -21,6 +21,17 @@ func newConfig(name string) *config {
 	}
 }
 
+// Get fetches a section by name.
+//
+// TODO: Support for unnamed section notation (@foo[idx]) is pending.
+func (c *config) Get(name string) *section {
+	i, ok := c.idx[name]
+	if !ok {
+		return nil
+	}
+	return c.sec[i]
+}
+
 func (c *config) Add(s *section) {
 	n := s.name
 	if n == "" {
@@ -74,6 +85,15 @@ func (s *section) Add(o *option) {
 		s.idx[n] = i
 		s.opts = append(s.opts, o)
 	}
+}
+
+// Get fetches an option by name.
+func (s *section) Get(name string) *option {
+	i, ok := s.idx[name]
+	if !ok {
+		return nil
+	}
+	return s.opts[i]
 }
 
 // An Option is the key to one or more values. Multiple values indicate

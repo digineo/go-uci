@@ -68,7 +68,7 @@ type tree struct {
 	dir     string
 	configs map[string]*config
 
-	sync.RWMutex
+	sync.Mutex
 }
 
 var _ Tree = (*tree)(nil)
@@ -107,19 +107,22 @@ func AddSection(config, section, typ string) { defaultTree.AddSection(config, se
 func DelSection(config, section string) { defaultTree.DelSection(config, section) }
 
 func (t *tree) LoadConfig(name string) error {
-	t.RLock()
+	t.Lock()
+	defer t.Unlock()
+
 	var exists bool
 	if t.configs != nil {
 		_, exists = t.configs[name]
 	}
-	t.RUnlock()
 	if exists {
 		return &ErrConfigAlreadyLoaded{name}
 	}
+	return t.loadConfig(name)
+}
 
-	t.Lock()
-	defer t.Unlock()
-
+// loadConfig actually reads a config file. Its call must be guarded by
+// locking the tree's mutex.
+func (t *tree) loadConfig(name string) error {
 	body, err := ioutil.ReadFile(filepath.Join(t.dir, name))
 	if err != nil {
 		return err
@@ -150,15 +153,49 @@ func (t *tree) Revert() {
 }
 
 func (t *tree) Get(config, section, option string) ([]string, bool) {
-	t.RLock()
-	defer t.RUnlock()
+	t.Lock()
+	defer t.Unlock()
 
-	return nil, false
+	if vals, ok := t.lookupValues(config, section, option); ok {
+		return vals, true
+	}
+
+	t.loadConfig(config)
+	return t.lookupValues(config, section, option)
+}
+
+func (t *tree) lookupOption(config, section, option string) (*option, bool) {
+	cfg, exists := t.configs[config]
+	if !exists {
+		return nil, false
+	}
+	sec := cfg.Get(section)
+	if sec == nil {
+		return nil, true
+	}
+	return sec.Get(option), true
+}
+
+func (t *tree) lookupValues(config, section, option string) ([]string, bool) {
+	opt, ok := t.lookupOption(config, section, option)
+	if !ok {
+		return nil, false
+	}
+	if opt == nil {
+		return nil, true
+	}
+	return opt.values, true
 }
 
 func (t *tree) Set(config, section, option string, values ...string) bool {
 	t.Lock()
 	defer t.Unlock()
+
+	if opt, ok := t.lookupOption(config, section, option); ok {
+		if opt == nil {
+			// TODO
+		}
+	}
 
 	return false
 }
