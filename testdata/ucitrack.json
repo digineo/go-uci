@@ -1,120 +1,99 @@
 {
-  "Name": "ucitrack",
-  "Sections": [{
-    "Type": "network",
-    "Name": "",
-    "Index": 0,
-    "Options": {
-      "affects": {"Name": "affects","Values": ["dhcp","radvd"]},
-      "init":    {"Name": "init",   "Values": ["network"]}
+  "name": "ucitrack",
+  "sections": [
+    {
+      "type": "network",
+      "options": [
+        {"name": "init",    "values": ["network"]},
+        {"name": "affects", "values": ["dhcp", "radvd"]}
+      ]
+    },
+    {
+      "type": "wireless",
+      "options": [
+        {"name": "affects", "values": ["network"]}
+      ]
+    },
+    {
+      "type": "firewall",
+      "options": [
+        {"name": "init",    "values": ["firewall"]},
+        {"name": "affects", "values": ["luci-splash", "qos", "miniupnpd"]}
+      ]
+    },
+    {
+      "type": "olsr",
+      "options": [
+        {"name": "init", "values": ["olsrd"]}
+      ]
+    },
+    {
+      "type": "dhcp",
+      "options": [
+        {"name": "init",    "values": ["dnsmasq"]},
+        {"name": "affects", "values": ["odhcpd"]}
+      ]
+    },
+    {
+      "type": "odhcpd",
+      "options": [
+        {"name": "init", "values": ["odhcpd"]}
+      ]
+    },
+    {
+      "type": "dropbear",
+      "options": [
+        {"name": "init", "values": ["dropbear"]}
+      ]
+    },
+    {
+      "type": "httpd",
+      "options": [
+        {"name": "init", "values": ["httpd"]}
+      ]
+    },
+    {
+      "type": "fstab",
+      "options": [
+        {"name": "init", "values": ["fstab"]}
+      ]
+    },
+    {
+      "type": "qos",
+      "options": [
+        {"name": "init", "values": ["qos"]}
+      ]
+    },
+    {
+      "type": "system",
+      "options": [
+        {"name": "init",    "values": ["led"]},
+        {"name": "affects", "values": ["luci_statistics", "dhcp"]}
+      ]
+    },
+    {
+      "type": "luci_splash",
+      "options": [
+        {"name": "init", "values": ["luci_splash"]}
+      ]
+    },
+    {
+      "type": "upnpd",
+      "options": [
+        {"name": "init", "values": ["miniupnpd"]}
+      ]
+    },
+    {
+      "type": "ntpclient",
+      "options": [
+        {"name": "init", "values": ["ntpclient"]}
+      ]
+    },
+    {
+      "type": "samba",
+      "options": [
+        {"name": "init", "values": ["samba"]}
+      ]
     }
-  }, {
-    "Type": "wireless",
-    "Name": "",
-    "Index": 1,
-    "Options": {
-      "affects": {"Name": "affects","Values": ["network"]}
-    }
-  }, {
-    "Type": "firewall",
-    "Name": "",
-    "Index": 2,
-    "Options": {
-      "affects": {"Name": "affects","Values": ["luci-splash","qos","miniupnpd"]},
-      "init":    {"Name": "init",   "Values": ["firewall"]}
-    }
-  }, {
-    "Type": "olsr",
-    "Name": "",
-    "Index": 3,
-    "Options": {
-      "init": {"Name": "init","Values": ["olsrd"]}
-    }
-  }, {
-    "Type": "dhcp",
-    "Name": "",
-    "Index": 4,
-    "Options": {
-      "affects": {"Name": "affects","Values": ["odhcpd"]},
-      "init":    {"Name": "init",   "Values": ["dnsmasq"]}
-    }
-  }, {
-    "Type": "odhcpd",
-    "Name": "",
-    "Index": 5,
-    "Options": {
-      "init": {"Name": "init","Values": ["odhcpd"]}
-    }
-  }, {
-    "Type": "dropbear",
-    "Name": "",
-    "Index": 6,
-    "Options": {
-      "init": {"Name": "init","Values": ["dropbear"]}
-    }
-  }, {
-    "Type": "httpd",
-    "Name": "",
-    "Index": 7,
-    "Options": {
-      "init": {"Name": "init","Values": ["httpd"]}
-    }
-  }, {
-    "Type": "fstab",
-    "Name": "",
-    "Index": 8,
-    "Options": {
-      "init": {"Name": "init","Values": ["fstab"]}
-    }
-  }, {
-    "Type": "qos",
-    "Name": "",
-    "Index": 9,
-    "Options": {
-      "init": {"Name": "init","Values": ["qos"]}
-    }
-  }, {
-    "Type": "system",
-    "Name": "",
-    "Index": 10,
-    "Options": {
-      "affects": {"Name": "affects","Values": ["luci_statistics","dhcp"]},
-      "init":    {"Name": "init",   "Values": ["led"]}
-    }
-  }, {
-    "Type": "luci_splash",
-    "Name": "",
-    "Index": 11,
-    "Options": {
-      "init": {"Name": "init","Values": ["luci_splash"]}
-    }
-  }, {
-    "Type": "upnpd",
-    "Name": "",
-    "Index": 12,
-    "Options": {
-      "init": {"Name": "init","Values": ["miniupnpd"]}
-    }
-  }, {
-    "Type": "ntpclient",
-    "Name": "",
-    "Index": 13,
-    "Options": {
-      "init": {"Name": "init","Values": ["ntpclient"]}
-    }
-  }, {
-    "Type": "samba",
-    "Name": "",
-    "Index": 14,
-    "Options": {
-      "init": {"Name": "init","Values": ["samba"]}
-    }
-  }, {
-    "Type": "tinyproxy",
-    "Name": "",
-    "Index": 15,
-    "Options": {
-      "init": {"Name": "init","Values": ["tinyproxy"]}
-    }
-  }]
+  ]
 }

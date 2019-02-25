@@ -1,70 +1,29 @@
 {
-  "Name": "system",
-  "Sections": [
-    {
-      "Type": "system",
-      "Name": "",
-      "Index": 0,
-      "Options": {
-        "hostname": {
-          "Name": "hostname",
-          "Values": ["testhost"]
-        },
-        "log_size": {
-          "Name": "log_size",
-          "Values": ["64"]
-        },
-        "timezone": {
-          "Name": "timezone",
-          "Values": ["UTC"]
-        },
-        "ttylogin": {
-          "Name": "ttylogin",
-          "Values": ["0"]
-        },
-        "urandom_seed": {
-          "Name": "urandom_seed",
-          "Values": ["0"]
-        }
-      }
-    },
-    {
-      "Type": "timeserver",
-      "Name": "ntp",
-      "Index": 1,
-      "Options": {
-        "enable_server": {
-          "Name": "enable_server",
-          "Values": ["0"]
-        },
-        "enabled": {
-          "Name": "enabled",
-          "Values": ["1"]
-        },
-        "server": {
-          "Name": "server",
-          "Values": ["0.lede.pool.ntp.org","1.lede.pool.ntp.org","2.lede.pool.ntp.org","3.lede.pool.ntp.org"]
-        }
-      }
-    },
-    {
-      "Type": "gpio_switch",
-      "Name": "poe_passthrough",
-      "Index": 2,
-      "Options": {
-        "gpio_pin": {
-          "Name": "gpio_pin",
-          "Values": ["0"]
-        },
-        "name": {
-          "Name": "name",
-          "Values": ["PoE Passthrough"]
-        },
-        "value": {
-          "Name": "value",
-          "Values": ["0"]
-        }
-      }
-    }
-  ]
+  "name": "system",
+  "sections": [{
+    "type": "system",
+    "options": [
+      {"name": "timezone",     "values": ["UTC"]},
+      {"name": "ttylogin",     "values": ["0"]},
+      {"name": "log_size",     "values": ["64"]},
+      {"name": "urandom_seed", "values": ["0"]},
+      {"name": "hostname",     "values": ["testhost"]}
+    ]
+  },{
+    "name": "ntp",
+    "type": "timeserver",
+    "options": [
+      {"name": "enabled",       "values": ["1"]},
+      {"name": "enable_server", "values": ["0"]},
+      {"name": "server",        "values": ["0.lede.pool.ntp.org", "1.lede.pool.ntp.org", "2.lede.pool.ntp.org", "3.lede.pool.ntp.org"]}
+    ]
+  },{
+    "name": "poe_passthrough",
+    "type": "gpio_switch",
+    "options": [
+      {"name": "name",     "values": ["PoE Passthrough"]},
+      {"name": "gpio_pin", "values": ["0"]},
+      {"name": "value",    "values": ["0"]}
+    ]
+  }]
 }

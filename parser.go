@@ -1,19 +1,17 @@
-package parser
+package uci
 
 import (
 	"errors"
 	"fmt"
-
-	"github.com/digineo/go-uci/uci"
 )
 
-// Parse tries to parse a named input string into a Config object.
-func Parse(name, input string) (*uci.Config, error) {
+// parse tries to parse a named input string into a Config object.
+func parse(name, input string) (*config, error) {
 	_, ch := lex(name, input)
 
-	cfg := &uci.Config{Name: name}
-	var sec *uci.Section
-	var opt *uci.Option
+	cfg := newConfig(name)
+	var sec *section
+	var opt *option
 	inList := false
 
 	for it := range ch {
@@ -23,11 +21,11 @@ func Parse(name, input string) (*uci.Config, error) {
 		case itemError:
 			return nil, errors.New(it.val)
 		case itemConfig:
-			sec = &uci.Section{
-				Index:   len(cfg.Sections),
-				Options: make(map[string]*uci.Option),
+			if sec != nil {
+				cfg.Add(sec)
 			}
-			cfg.Sections = append(cfg.Sections, sec)
+
+			sec = newSection("", "")
 			opt = nil
 			inList = false
 
@@ -35,31 +33,35 @@ func Parse(name, input string) (*uci.Config, error) {
 			if sec == nil {
 				return nil, fmt.Errorf("missing config declaration, found option")
 			}
-			opt = &uci.Option{} // cannot append yet, need name first
+			if opt != nil {
+				sec.Add(opt)
+			}
+			opt = newOption("", nil)
 			inList = false
 
 		case itemList:
 			if sec == nil {
 				return nil, fmt.Errorf("missing config declaration, found option")
 			}
-			if opt == nil || opt.Name != "" && !inList {
-				opt = &uci.Option{}
+			if opt == nil || opt.name != "" && !inList {
+				opt = newOption("", nil)
 				inList = true
 			}
 
 		case itemIdent:
 			if opt != nil {
-				opt.Name = it.val
-				sec.Options[it.val] = opt
+				opt.name = it.val
+				sec.Add(opt)
 			} else {
-				sec.Type = it.val
+				sec.typ = it.val
 			}
 
 		case itemString:
 			if opt != nil {
-				opt.Values = append(opt.Values, it.val)
+				opt.AddValue(it.val)
 			} else {
-				sec.Name = it.val
+				sec.name = it.val
+				cfg.Add(sec)
 			}
 		}
 	}

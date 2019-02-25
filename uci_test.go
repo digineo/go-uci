@@ -6,33 +6,35 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/digineo/go-uci/uci"
 	"github.com/stretchr/testify/assert"
 )
 
-func opt(name string, vs ...string) *uci.Option {
-	return &uci.Option{Name: name, Values: vs}
+func opt(name string, vs ...string) *option {
+	_ = jsonConfig{}
+	return newOption(name, vs)
 }
 
-func loadExpected(name string) *uci.Config {
+func loadExpected(t *testing.T, name string) *config {
+	t.Helper()
+
 	f, err := os.Open(filepath.Join("testdata", name+".json"))
 	if err != nil {
-		panic(err)
+		t.Fatalf("cannot open %s.json: %v", name, err)
 	}
 	defer f.Close()
 
-	expected := uci.Config{}
+	expected := &config{}
 	err = json.NewDecoder(f).Decode(&expected)
 	if err != nil {
-		panic(err)
+		t.Fatalf("error decoding json: %v", err)
 	}
-	return &expected
+	return expected
 }
 
 func TestLoadConfig(t *testing.T) {
 	assert := assert.New(t)
 
-	for _, name := range []string{"emptyfile", "emptysection", "luci", "system", "ucitrack"} {
+	for _, name := range []string{"system", "emptyfile", "emptysection", "luci", "system", "ucitrack"} {
 		t.Run(name, func(t *testing.T) {
 			r := NewTree("testdata")
 			err := r.LoadConfig(name)
@@ -44,7 +46,7 @@ func TestLoadConfig(t *testing.T) {
 				json.NewEncoder(os.Stderr).Encode(actual)
 			}
 
-			expected := loadExpected(name)
+			expected := loadExpected(t, name)
 			assert.EqualValues(expected, actual)
 		})
 	}

@@ -1,16 +1,3 @@
-// Package uci implements a binding to OpenWRT's UCI (Unified Configuration
-// Interface) files in pure Go.
-//
-// The typical use case is reading and modifying UCI config options:
-//	import "github.com/digineo/go-uci"
-//	uci.Get("network", "lan", "ifname") //=> []string{"eth0.1"}
-//	uci.Set("network", "lan", "ipaddr", "192.168.7.1")
-//	uci.Commit() // or uci.Revert()
-//
-// For more details head over to the OpenWRT wiki, or dive into UCI's C
-// source code:
-//  - https://openwrt.org/docs/guide-user/base-system/uci
-//  - https://git.openwrt.org/?p=project/uci.git;a=summary
 package uci
 
 import (
@@ -18,9 +5,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"sync"
-
-	"github.com/digineo/go-uci/parser"
-	"github.com/digineo/go-uci/uci"
 )
 
 var defaultTree = NewTree("/etc/config")
@@ -35,8 +19,10 @@ func (err ErrConfigAlreadyLoaded) Error() string {
 	return fmt.Sprintf("%s already loaded", err.name)
 }
 
-// Tree defines the base directory for UCI config files. The default
-// on an OpenWRT device points to `/etc/config`.
+// Tree defines the base directory for UCI config files. The default value
+// on OpenWRT devices point to /etc/config, so that is what the default
+// tree uses as well (you can access the default tree with the package level
+// functions with the same signature as in this interface).
 type Tree interface {
 	// LoadConfig reads a config file into memory and returns nil. If the
 	// config is already loaded, ErrConfigAlreadyLoaded is returned. Errors
@@ -65,14 +51,14 @@ type Tree interface {
 
 	// Set replaces the fully qualified option with the given values. It
 	// returns whether the config file and section exists. For new files
-	// and sections, you first need to initialize them with NewSection().
+	// and sections, you first need to initialize them with AddSection().
 	Set(config, section, option string, values ...string) bool
 
 	// Del removes a fully qualified option.
 	Del(config, section, option string)
 
-	// NewSection adds a new config section.
-	NewSection(config, section, typ string)
+	// AddSection adds a new config section.
+	AddSection(config, section, typ string)
 
 	// DelSection remove a config section and its options.
 	DelSection(config, section string)
@@ -80,7 +66,7 @@ type Tree interface {
 
 type tree struct {
 	dir     string
-	configs map[string]*uci.Config
+	configs map[string]*config
 
 	sync.RWMutex
 }
@@ -114,8 +100,8 @@ func Set(config, section, option string, values ...string) bool {
 // Del delegates to the default tree. See Tree for details.
 func Del(config, section, option string) { defaultTree.Del(config, section, option) }
 
-// NewSection delegates to the default tree. See Tree for details.
-func NewSection(config, section, typ string) { defaultTree.NewSection(config, section, typ) }
+// AddSection delegates to the default tree. See Tree for details.
+func AddSection(config, section, typ string) { defaultTree.AddSection(config, section, typ) }
 
 // DelSection delegates to the default tree. See Tree for details.
 func DelSection(config, section string) { defaultTree.DelSection(config, section) }
@@ -138,13 +124,13 @@ func (t *tree) LoadConfig(name string) error {
 	if err != nil {
 		return err
 	}
-	cfg, err := parser.Parse(name, string(body))
+	cfg, err := parse(name, string(body))
 	if err != nil {
 		return err
 	}
 
 	if t.configs == nil {
-		t.configs = make(map[string]*uci.Config)
+		t.configs = make(map[string]*config)
 	}
 	t.configs[name] = cfg
 	return nil
@@ -182,7 +168,7 @@ func (t *tree) Del(config, section, option string) {
 	defer t.Unlock()
 }
 
-func (t *tree) NewSection(config, section, typ string) {
+func (t *tree) AddSection(config, section, typ string) {
 	t.Lock()
 	defer t.Unlock()
 }
