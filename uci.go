@@ -184,6 +184,7 @@ func (t *tree) Set(config, section, option string, values ...string) bool {
 	} else {
 		sec.Add(newOption(option, values))
 	}
+	cfg.tainted = true
 	return true
 }
 
@@ -202,7 +203,9 @@ func (t *tree) Del(config, section, option string) {
 		// same logic applies here
 		return
 	}
-	sec.Del(option)
+	if sec.Del(option) {
+		cfg.tainted = true
+	}
 }
 
 func (t *tree) AddSection(config, section, typ string) error {
@@ -212,11 +215,13 @@ func (t *tree) AddSection(config, section, typ string) error {
 	cfg, ok := t.ensureConfigLoaded(config)
 	if !ok {
 		cfg = newConfig(config)
+		cfg.tainted = true
 		t.configs[config] = cfg
 	}
 	sec := cfg.Get(section)
 	if sec == nil {
 		cfg.Add(newSection(typ, section))
+		cfg.tainted = true
 		return nil
 	}
 	if sec.Type != typ {
@@ -234,4 +239,5 @@ func (t *tree) DelSection(config, section string) {
 		return
 	}
 	cfg.Del(section)
+	cfg.tainted = true
 }

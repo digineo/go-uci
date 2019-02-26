@@ -13,6 +13,8 @@ import "fmt"
 type config struct {
 	Name     string     `json:"name"`
 	Sections []*section `json:"sections,omitempty"`
+
+	tainted bool // changed by tree methods when things were modified
 }
 
 // newConfig returns a new config object.
@@ -120,14 +122,26 @@ func (s *section) Merge(o *option) {
 	s.Options = append(s.Options, o)
 }
 
-func (s *section) Del(name string) {
+// Del removes an option with the given name. It returns whether the
+// option actually existed.
+func (s *section) Del(name string) bool {
 	var i int
 	for i = 0; i < len(s.Options); i++ {
 		if s.Options[i].Name == name {
 			break
 		}
 	}
-	s.Options = append(s.Options[:i], s.Options[i+1:]...)
+	switch l := len(s.Options); {
+	case i == 0: // at the end, cut tail
+		s.Options = s.Options[i+1:]
+	case i == l-1: // at the beginning, move head
+		s.Options = s.Options[:l]
+	case i < l: // somewhere in the middle; move items around
+		s.Options = append(s.Options[:i], s.Options[i+1:]...)
+	default: // i == l; option does not exist
+		return false
+	}
+	return true
 }
 
 // Get fetches an option by name.
