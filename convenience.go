@@ -5,8 +5,8 @@ package uci
 var defaultTree = NewTree("/etc/config")
 
 // LoadConfig delegates to the default tree. See Tree for details.
-func LoadConfig(name string) error {
-	return defaultTree.LoadConfig(name)
+func LoadConfig(name string, forceReload bool) error {
+	return defaultTree.LoadConfig(name, forceReload)
 }
 
 // Commit delegates to the default tree. See Tree for details.

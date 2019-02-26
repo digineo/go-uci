@@ -12,13 +12,14 @@ import (
 // functions with the same signature as in this interface).
 type Tree interface {
 	// LoadConfig reads a config file into memory and returns nil. If the
-	// config is already loaded, ErrConfigAlreadyLoaded is returned. Errors
-	// reading the config file are returned verbatim.
+	// config is already loaded, and forceReload is false, an error of type
+	// ErrConfigAlreadyLoaded is returned. Errors reading the config file
+	// are returned verbatim.
 	//
 	// You don't need to explicitly call LoadConfig(): Accessing configs
 	// (and their sections) via Get, Set, Add, Delete, DeleteAll will
 	// load missing files automatically.
-	LoadConfig(name string) error
+	LoadConfig(name string, forceReload bool) error
 
 	// Commit writes all changes back to the system.
 	//
@@ -67,7 +68,7 @@ func NewTree(root string) Tree {
 	return &tree{dir: root}
 }
 
-func (t *tree) LoadConfig(name string) error {
+func (t *tree) LoadConfig(name string, forceReload bool) error {
 	t.Lock()
 	defer t.Unlock()
 
@@ -75,7 +76,7 @@ func (t *tree) LoadConfig(name string) error {
 	if t.configs != nil {
 		_, exists = t.configs[name]
 	}
-	if exists {
+	if exists && !forceReload {
 		return &ErrConfigAlreadyLoaded{name}
 	}
 	return t.loadConfig(name)
