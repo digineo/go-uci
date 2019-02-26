@@ -28,9 +28,10 @@ type Tree interface {
 	// while the preceeding files are not reverted.
 	Commit() error
 
-	// Revert undoes any changes. This clears the internal memory and does
-	// not access the file system.
-	Revert()
+	// Revert undoes changes to the config files given as arguments. If
+	// no argument is given, all changes are reverted. This clears the
+	// internal memory and does not access the file system.
+	Revert(configs ...string)
 
 	// Get retrieves (all) values for a fully qualified option, and a
 	// boolean indicating whether the config file and the config section
@@ -108,9 +109,14 @@ func (t *tree) Commit() error {
 	return nil
 }
 
-func (t *tree) Revert() {
+func (t *tree) Revert(configs ...string) {
 	t.Lock()
-	t.configs = nil
+	if len(configs) == 0 {
+		t.configs = nil
+	}
+	for _, config := range configs {
+		delete(t.configs, config)
+	}
 	t.Unlock()
 }
 

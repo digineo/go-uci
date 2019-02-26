@@ -15,8 +15,8 @@ func Commit() error {
 }
 
 // Revert delegates to the default tree. See Tree for details.
-func Revert() {
-	defaultTree.Revert()
+func Revert(configs ...string) {
+	defaultTree.Revert(configs...)
 }
 
 // Get delegates to the default tree. See Tree for details.
