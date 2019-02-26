@@ -1,23 +1,12 @@
 package uci
 
 import (
-	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"sync"
 )
 
 var defaultTree = NewTree("/etc/config")
-
-// ErrConfigAlreadyLoaded is returned by LoadConfig, if the given config
-// name is already present.
-type ErrConfigAlreadyLoaded struct {
-	name string
-}
-
-func (err ErrConfigAlreadyLoaded) Error() string {
-	return fmt.Sprintf("%s already loaded", err.name)
-}
 
 // Tree defines the base directory for UCI config files. The default value
 // on OpenWRT devices point to /etc/config, so that is what the default
