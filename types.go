@@ -1,6 +1,10 @@
 package uci
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+	"io"
+)
 
 // NOTE: config, section and option types basically are AST nodes for the
 // parser. The JSON struct tags are mainly for development and testing
@@ -23,6 +27,31 @@ func newConfig(name string) *config {
 		Name:     name,
 		Sections: make([]*section, 0, 1),
 	}
+}
+
+func (c *config) WriteTo(w io.Writer) (n int64, err error) {
+	var buf bytes.Buffer
+
+	for _, sec := range c.Sections {
+		if sec.Name == "" {
+			fmt.Fprintf(&buf, "\nconfig %s\n", sec.Type)
+		} else {
+			fmt.Fprintf(&buf, "\nconfig %s '%s'\n", sec.Type, sec.Name)
+		}
+
+		for _, opt := range sec.Options {
+			switch l := len(opt.Values); {
+			case l == 1:
+				fmt.Fprintf(&buf, "\toption %s '%s'\n", opt.Name, opt.Values[0])
+			case l > 1:
+				for _, v := range opt.Values {
+					fmt.Fprintf(&buf, "\tlist %s '%s'\n", opt.Name, v)
+				}
+			}
+		}
+	}
+	buf.WriteByte('\n')
+	return buf.WriteTo(w)
 }
 
 // Get fetches a section by name.

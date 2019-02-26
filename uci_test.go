@@ -1,7 +1,9 @@
 package uci
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -56,6 +58,30 @@ func TestLoadConfig(t *testing.T) {
 
 			expected := loadExpected(t, name)
 			assert.EqualValues(expected, actual)
+		})
+	}
+}
+
+func TestWriteConfig(t *testing.T) {
+	assert := assert.New(t)
+
+	for _, name := range []string{"system", "emptyfile", "emptysection", "luci", "ucitrack"} {
+		t.Run(name, func(t *testing.T) {
+			r := NewTree("testdata")
+			err := r.LoadConfig(name, false)
+			assert.NoError(err)
+
+			actual := r.(*tree).configs[name]
+			var buf bytes.Buffer
+			_, err = actual.WriteTo(&buf)
+			assert.NoError(err)
+
+			if dump["serialized"] {
+				fmt.Fprint(os.Stderr, buf.String())
+			}
+
+			// expected := loadExpected(t, name)
+			// assert.EqualValues(expected, actual)
 		})
 	}
 }

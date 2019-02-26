@@ -2,6 +2,7 @@ package uci
 
 import (
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"sync"
 )
@@ -106,6 +107,12 @@ func (t *tree) Commit() error {
 	t.Lock()
 	defer t.Unlock()
 
+	for _, config := range t.configs {
+		if !config.tainted {
+			continue
+		}
+		t.saveConfig(config)
+	}
 	return nil
 }
 
@@ -240,4 +247,34 @@ func (t *tree) DelSection(config, section string) {
 	}
 	cfg.Del(section)
 	cfg.tainted = true
+}
+
+func (t *tree) saveConfig(c *config) error {
+	// f has O_RDWR|O_CREAT|O_EXCL + 0600
+	f, err := ioutil.TempFile("", c.Name)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.WriteTo(f)
+	if err != nil {
+		f.Close()
+		os.Remove(f.Name())
+		return err
+	}
+
+	if err = f.Chmod(0644); err != nil {
+		f.Close()
+		os.Remove(f.Name())
+		return err
+	}
+	f.Sync()
+	f.Close()
+
+	if err = os.Rename(f.Name(), filepath.Join(t.dir, c.Name)); err != nil {
+		return err
+	}
+
+	c.tainted = false
+	return nil
 }

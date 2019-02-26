@@ -23,6 +23,7 @@ func init() {
 			dump["json"] = true
 			dump["token"] = true
 			dump["lex"] = true
+			dump["serialized"] = true
 		} else {
 			dump[field] = true
 		}
