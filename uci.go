@@ -6,8 +6,6 @@ import (
 	"sync"
 )
 
-var defaultTree = NewTree("/etc/config")
-
 // Tree defines the base directory for UCI config files. The default value
 // on OpenWRT devices point to /etc/config, so that is what the default
 // tree uses as well (you can access the default tree with the package level
@@ -46,8 +44,10 @@ type Tree interface {
 	// Del removes a fully qualified option.
 	Del(config, section, option string)
 
-	// AddSection adds a new config section.
-	AddSection(config, section, typ string)
+	// AddSection adds a new config section. If the section already exists,
+	// and the types match (existing type and given type), nothing happens.
+	// Otherwise an ErrSectionTypeMismatch is returned.
+	AddSection(config, section, typ string) error
 
 	// DelSection remove a config section and its options.
 	DelSection(config, section string)
@@ -125,6 +125,17 @@ func (t *tree) Get(config, section, option string) ([]string, bool) {
 	return t.lookupValues(config, section, option)
 }
 
+func (t *tree) ensureConfigLoaded(config string) (*config, bool) {
+	cfg, loaded := t.configs[config]
+	if !loaded {
+		if err := t.loadConfig(config); err != nil {
+			return nil, false
+		}
+		cfg = t.configs[config]
+	}
+	return cfg, loaded
+}
+
 func (t *tree) lookupOption(config, section, option string) (*option, bool) {
 	cfg, exists := t.configs[config]
 	if !exists {
@@ -145,33 +156,75 @@ func (t *tree) lookupValues(config, section, option string) ([]string, bool) {
 	if opt == nil {
 		return nil, true
 	}
-	return opt.values, true
+	return opt.Values, true
 }
 
 func (t *tree) Set(config, section, option string, values ...string) bool {
 	t.Lock()
 	defer t.Unlock()
 
-	if opt, ok := t.lookupOption(config, section, option); ok {
-		if opt == nil {
-			// TODO
-		}
+	cfg, ok := t.ensureConfigLoaded(config)
+	if !ok {
+		return false
+	}
+	sec := cfg.Get(section)
+	if sec == nil {
+		return false
 	}
 
-	return false
+	if opt := sec.Get(option); opt != nil {
+		opt.SetValues(values...)
+	} else {
+		sec.Add(newOption(option, values))
+	}
+	return true
 }
 
 func (t *tree) Del(config, section, option string) {
 	t.Lock()
 	defer t.Unlock()
+
+	cfg, ok := t.ensureConfigLoaded(config)
+	if !ok {
+		// we want to delete option, but neither config, nor section,
+		// nor config do exist. hence, we've reached our desired state
+		return
+	}
+	sec := cfg.Get(section)
+	if sec == nil {
+		// same logic applies here
+		return
+	}
+	sec.Del(option)
 }
 
-func (t *tree) AddSection(config, section, typ string) {
+func (t *tree) AddSection(config, section, typ string) error {
 	t.Lock()
 	defer t.Unlock()
+
+	cfg, ok := t.ensureConfigLoaded(config)
+	if !ok {
+		cfg = newConfig(config)
+		t.configs[config] = cfg
+	}
+	sec := cfg.Get(section)
+	if sec == nil {
+		cfg.Add(newSection(typ, section))
+		return nil
+	}
+	if sec.Type != typ {
+		return ErrSectionTypeMismatch{config, section, sec.Type, typ}
+	}
+	return nil
 }
 
 func (t *tree) DelSection(config, section string) {
 	t.Lock()
 	defer t.Unlock()
+
+	cfg, ok := t.ensureConfigLoaded(config)
+	if !ok {
+		return
+	}
+	cfg.Del(section)
 }

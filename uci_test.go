@@ -23,6 +23,19 @@ func loadExpected(t *testing.T, name string) *config {
 	if err != nil {
 		t.Fatalf("error decoding json: %v", err)
 	}
+
+	// The JSON dump does not contain empty slices (they're marked with
+	// "omitempty"), but the decoder creates them anyway. To get the tests
+	// to pass, we need to eliminate nil slices (sections of config and
+	// options of section) manually.
+	if expected.Sections == nil {
+		expected.Sections = []*section{}
+	}
+	for _, sec := range expected.Sections {
+		if sec.Options == nil {
+			sec.Options = []*option{}
+		}
+	}
 	return expected
 }
 
@@ -37,7 +50,7 @@ func TestLoadConfig(t *testing.T) {
 
 			actual := r.(*tree).configs[name]
 
-			if os.Getenv("DUMP_JSON") == "1" {
+			if dumpJSON {
 				json.NewEncoder(os.Stderr).Encode(actual)
 			}
 
