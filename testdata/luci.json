@@ -4,21 +4,21 @@
     "name": "main",
     "type": "core",
     "options": [
-      {"name": "lang",        "values": ["auto"]},
-      {"name": "mediaurlbase","values": ["/luci-static/bootstrap"]},
-      {"name": "resourcebase","values": ["/luci-static/resources"]}
+      { "name": "lang",        "values": ["auto"] },
+      { "name": "mediaurlbase","values": ["/luci-static/bootstrap"] },
+      { "name": "resourcebase","values": ["/luci-static/resources"] }
     ]
   },{
     "name": "flash_keep",
     "type": "extern",
     "options": [
-      {"name": "uci",     "values": ["/etc/config/"]},
-      {"name": "dropbear","values": ["/etc/dropbear/"]},
-      {"name": "openvpn", "values": ["/etc/openvpn/"]},
-      {"name": "passwd",  "values": ["/etc/passwd"]},
-      {"name": "opkg",    "values": ["/etc/opkg.conf"]},
-      {"name": "firewall","values": ["/etc/firewall.user"]},
-      {"name": "uploads", "values": ["/lib/uci/upload/"]}
+      { "name": "uci",     "values": ["/etc/config/"] },
+      { "name": "dropbear","values": ["/etc/dropbear/"] },
+      { "name": "openvpn", "values": ["/etc/openvpn/"] },
+      { "name": "passwd",  "values": ["/etc/passwd"] },
+      { "name": "opkg",    "values": ["/etc/opkg.conf"] },
+      { "name": "firewall","values": ["/etc/firewall.user"] },
+      { "name": "uploads", "values": ["/lib/uci/upload/"] }
     ]
   },{
     "name": "languages",
@@ -27,14 +27,14 @@
     "name": "sauth",
     "type": "internal",
     "options": [
-      {"name": "sessionpath","values": ["/tmp/luci-sessions"]},
-      {"name": "sessiontime","values": ["3600"]}
+      { "name": "sessionpath","values": ["/tmp/luci-sessions"] },
+      { "name": "sessiontime","values": ["3600"] }
     ]
   },{
     "name": "ccache",
     "type": "internal",
     "options": [
-      {"name": "enable","values": ["1"]}
+      { "name": "enable","values": ["1"] }
     ]
   },{
     "name": "themes",

@@ -29,7 +29,7 @@ func loadExpected(t *testing.T, name string) *config {
 func TestLoadConfig(t *testing.T) {
 	assert := assert.New(t)
 
-	for _, name := range []string{"system", "emptyfile", "emptysection", "luci", "system", "ucitrack"} {
+	for _, name := range []string{"system", "emptyfile", "emptysection", "luci", "ucitrack"} {
 		t.Run(name, func(t *testing.T) {
 			r := NewTree("testdata")
 			err := r.LoadConfig(name)

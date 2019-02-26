@@ -1,99 +1,88 @@
 {
   "name": "ucitrack",
-  "sections": [
-    {
-      "type": "network",
-      "options": [
-        {"name": "init",    "values": ["network"]},
-        {"name": "affects", "values": ["dhcp", "radvd"]}
-      ]
-    },
-    {
-      "type": "wireless",
-      "options": [
-        {"name": "affects", "values": ["network"]}
-      ]
-    },
-    {
-      "type": "firewall",
-      "options": [
-        {"name": "init",    "values": ["firewall"]},
-        {"name": "affects", "values": ["luci-splash", "qos", "miniupnpd"]}
-      ]
-    },
-    {
-      "type": "olsr",
-      "options": [
-        {"name": "init", "values": ["olsrd"]}
-      ]
-    },
-    {
-      "type": "dhcp",
-      "options": [
-        {"name": "init",    "values": ["dnsmasq"]},
-        {"name": "affects", "values": ["odhcpd"]}
-      ]
-    },
-    {
-      "type": "odhcpd",
-      "options": [
-        {"name": "init", "values": ["odhcpd"]}
-      ]
-    },
-    {
-      "type": "dropbear",
-      "options": [
-        {"name": "init", "values": ["dropbear"]}
-      ]
-    },
-    {
-      "type": "httpd",
-      "options": [
-        {"name": "init", "values": ["httpd"]}
-      ]
-    },
-    {
-      "type": "fstab",
-      "options": [
-        {"name": "init", "values": ["fstab"]}
-      ]
-    },
-    {
-      "type": "qos",
-      "options": [
-        {"name": "init", "values": ["qos"]}
-      ]
-    },
-    {
-      "type": "system",
-      "options": [
-        {"name": "init",    "values": ["led"]},
-        {"name": "affects", "values": ["luci_statistics", "dhcp"]}
-      ]
-    },
-    {
-      "type": "luci_splash",
-      "options": [
-        {"name": "init", "values": ["luci_splash"]}
-      ]
-    },
-    {
-      "type": "upnpd",
-      "options": [
-        {"name": "init", "values": ["miniupnpd"]}
-      ]
-    },
-    {
-      "type": "ntpclient",
-      "options": [
-        {"name": "init", "values": ["ntpclient"]}
-      ]
-    },
-    {
-      "type": "samba",
-      "options": [
-        {"name": "init", "values": ["samba"]}
-      ]
-    }
-  ]
+  "sections": [{
+    "type": "network",
+    "options": [
+      { "name": "init",    "values": ["network"] },
+      { "name": "affects", "values": ["dhcp", "radvd"] }
+    ]
+  },{
+    "type": "wireless",
+    "options": [
+      { "name": "affects", "values": ["network"] }
+    ]
+  },{
+    "type": "firewall",
+    "options": [
+      { "name": "init",    "values": ["firewall"] },
+      { "name": "affects", "values": ["luci-splash", "qos", "miniupnpd"] }
+    ]
+  },{
+    "type": "olsr",
+    "options": [
+      { "name": "init", "values": ["olsrd"] }
+    ]
+  },{
+    "type": "dhcp",
+    "options": [
+      { "name": "init",    "values": ["dnsmasq"] },
+      { "name": "affects", "values": ["odhcpd"] }
+    ]
+  },{
+    "type": "odhcpd",
+    "options": [
+      { "name": "init", "values": ["odhcpd"] }
+    ]
+  },{
+    "type": "dropbear",
+    "options": [
+      { "name": "init", "values": ["dropbear"] }
+    ]
+  },{
+    "type": "httpd",
+    "options": [
+      { "name": "init", "values": ["httpd"] }
+    ]
+  },{
+    "type": "fstab",
+    "options": [
+      { "name": "init", "values": ["fstab"] }
+    ]
+  },{
+    "type": "qos",
+    "options": [
+      { "name": "init", "values": ["qos"] }
+    ]
+  },{
+    "type": "system",
+    "options": [
+      { "name": "init",    "values": ["led"] },
+      { "name": "affects", "values": ["luci_statistics", "dhcp"] }
+    ]
+  },{
+    "type": "luci_splash",
+    "options": [
+      { "name": "init", "values": ["luci_splash"] }
+    ]
+  },{
+    "type": "upnpd",
+    "options": [
+      { "name": "init", "values": ["miniupnpd"] }
+    ]
+  },{
+    "type": "ntpclient",
+    "options": [
+      { "name": "init", "values": ["ntpclient"] }
+    ]
+  },{
+    "type": "samba",
+    "options": [
+      { "name": "init", "values": ["samba"] }
+    ]
+  },{
+    "type": "tinyproxy",
+    "options": [
+      { "name": "init", "values": ["tinyproxy"] }
+    ]
+  }]
 }
