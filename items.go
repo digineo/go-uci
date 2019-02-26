@@ -71,8 +71,53 @@ const (
 //
 // https://talks.golang.org/2011/lex.slide#11
 func (i item) String() string {
+	if i.pos < 0 {
+		if i.typ != itemError && len(i.val) > 25 {
+			return fmt.Sprintf("(%s %.25q...)", i.typ, i.val)
+		}
+		return fmt.Sprintf("(%s %q)", i.typ, i.val)
+	}
+
 	if i.typ != itemError && len(i.val) > 25 {
 		return fmt.Sprintf("(%s %.25q... %d)", i.typ, i.val, i.pos)
 	}
 	return fmt.Sprintf("(%s %q %d)", i.typ, i.val, i.pos)
+}
+
+type scanFn func(*scanner) scanFn
+
+type scanToken int
+
+const (
+	tokError scanToken = iota
+	tokEOF
+
+	tokPackage // item-seq: (package, string)
+	tokSection // item-seq: (config, ident, maybe string)
+	tokOption  // item-seq: (option or list, ident, string)
+)
+
+func (t scanToken) String() string {
+	switch t {
+	case tokEOF:
+		return "eof"
+	case tokError:
+		return "error"
+	case tokPackage:
+		return "package"
+	case tokSection:
+		return "config"
+	case tokOption:
+		return "option"
+	}
+	return fmt.Sprintf("%%scanToken(%d)", int(t))
+}
+
+type token struct {
+	typ   scanToken
+	items []item
+}
+
+func (t token) String() string {
+	return fmt.Sprintf("%s%s", t.typ, t.items)
 }

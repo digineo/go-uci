@@ -22,20 +22,25 @@ library borrows code from Go's standard library (BSD-style licensed).
 
 The UCI grammar (for the purpose of this library) is defined as follows:
 
-	uci = configDecl*
-	    | (packageDecl configDecl*)+
+	uci
+		configDecl*
+	    (packageDecl configDecl*)+
+	packageDecl
+		"package" value CRLF configDecl*        // configName=value
+	configDecl
+		"config" ident value? CRLF optionDecl*  // sectionType=ident sectionName=value
+	optionDecl
+		"option" ident value                    // optionName=ident optionValue=value
+	    "list" ident value                      // optionName=ident optionValue=value
+	ident
+		[_a-zA-Z0-9]+
+	value
+		"'" STRING "'"
+	    "\"" STRING "\""
+	    ident
 
-	packageDecl = "package" value CRLF configDecl* # value:config-name
-
-	configDecl = "config" ident value? CRLF optionDecl* # ident:section-type value:section-name
-
-	optionDecl = "option" ident value # ident:option-name value:option-value
-	           | "list" ident value   # ident:option-name value:option-value
-
-	ident = [_a-zA-Z0-9]+
-
-	value = "'" STRING "'"
-	      | "\"" STRING "\""
-	      | ident
+For now, UCI imports/exports (packageDecl production) are not supported
+yet. The STRING token (value production) is also somewhat vaguely
+defined, and needs to be aligned with the actual C implementation.
 */
 package uci
