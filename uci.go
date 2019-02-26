@@ -78,34 +78,6 @@ func NewTree(root string) Tree {
 	return &tree{dir: root}
 }
 
-// LoadConfig delegates to the default tree. See Tree for details.
-func LoadConfig(name string) error { return defaultTree.LoadConfig(name) }
-
-// Commit delegates to the default tree. See Tree for details.
-func Commit() error { return defaultTree.Commit() }
-
-// Revert delegates to the default tree. See Tree for details.
-func Revert() { defaultTree.Revert() }
-
-// Get delegates to the default tree. See Tree for details.
-func Get(config, section, option string) ([]string, bool) {
-	return defaultTree.Get(config, section, option)
-}
-
-// Set delegates to the default tree. See Tree for details.
-func Set(config, section, option string, values ...string) bool {
-	return defaultTree.Set(config, section, option, values...)
-}
-
-// Del delegates to the default tree. See Tree for details.
-func Del(config, section, option string) { defaultTree.Del(config, section, option) }
-
-// AddSection delegates to the default tree. See Tree for details.
-func AddSection(config, section, typ string) { defaultTree.AddSection(config, section, typ) }
-
-// DelSection delegates to the default tree. See Tree for details.
-func DelSection(config, section string) { defaultTree.DelSection(config, section) }
-
 func (t *tree) LoadConfig(name string) error {
 	t.Lock()
 	defer t.Unlock()
