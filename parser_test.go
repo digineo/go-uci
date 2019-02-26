@@ -18,7 +18,7 @@ func testParser(t *testing.T, name, input string, expected []token) {
 
 	var i int
 	ok := scan(name, input).each(func(tok token) bool {
-		if dumpToken {
+		if dump["token"] {
 			fmt.Println(tok)
 		}
 

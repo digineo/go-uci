@@ -15,13 +15,17 @@ import (
 // something like
 //
 //	DUMP="lex,token" go test -v ./...
-var dumpJSON, dumpToken, dumpLexemes bool
+var dump = make(map[string]bool)
 
 func init() {
 	for _, field := range strings.Split(os.Getenv("DUMP"), ",") {
-		dumpJSON = dumpJSON || field == "all" || field == "json"
-		dumpToken = dumpToken || field == "all" || field == "token"
-		dumpLexemes = dumpLexemes || field == "all" || field == "lex"
+		if field == "all" {
+			dump["json"] = true
+			dump["token"] = true
+			dump["lex"] = true
+		} else {
+			dump[field] = true
+		}
 	}
 }
 

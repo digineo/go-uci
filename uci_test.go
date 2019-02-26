@@ -45,12 +45,12 @@ func TestLoadConfig(t *testing.T) {
 	for _, name := range []string{"system", "emptyfile", "emptysection", "luci", "ucitrack"} {
 		t.Run(name, func(t *testing.T) {
 			r := NewTree("testdata")
-			err := r.LoadConfig(name)
+			err := r.LoadConfig(name, false)
 			assert.NoError(err)
 
 			actual := r.(*tree).configs[name]
 
-			if dumpJSON {
+			if dump["json"] {
 				json.NewEncoder(os.Stderr).Encode(actual)
 			}
 
