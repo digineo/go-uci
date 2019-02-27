@@ -52,6 +52,28 @@ config multiline 'line1\
 `
 const tcUnquotedInput = "config foo bar\noption answer 42\n"
 
+const tcUnnamedInput = `
+config foo named
+	option pos '0'
+	option unnamed '0'
+	list list 0
+
+config foo
+	option pos '1'
+	option unnamed '1'
+	list list 10
+
+config foo
+	option pos '2'
+	option unnamed '1'
+	list list 20
+
+config foo named
+	option pos '3'
+	option unnamed '0'
+	list list 30
+`
+
 var lexerTests = []struct {
 	name, input string
 	expected    []item

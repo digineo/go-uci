@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strconv"
+	"strings"
 )
 
 // NOTE: config, section and option types basically are AST nodes for the
@@ -56,14 +58,85 @@ func (c *config) WriteTo(w io.Writer) (n int64, err error) {
 
 // Get fetches a section by name.
 //
-// TODO: Support for unnamed section notation (@foo[idx]) is pending.
+// Support for unnamed section notation (@foo[idx]) is present.
 func (c *config) Get(name string) *section {
+	if strings.HasPrefix(name, "@") {
+		sec, _ := c.getUnnamed(name) // TODO: log error?
+		return sec
+	}
+	return c.getNamed(name)
+}
+
+func (c *config) getNamed(name string) *section {
 	for _, sec := range c.Sections {
 		if sec.Name == name {
 			return sec
 		}
 	}
 	return nil
+}
+
+func unmangleSectionName(name string) (typ string, index int, err error) {
+	l := len(name)
+	if l < 5 { // "@a[0]"
+		err = fmt.Errorf("implausible section selector: must be at least 5 characters long")
+		return
+	}
+	if name[0] != '@' {
+		err = fmt.Errorf("invalid syntax: section selector must start with @ sign")
+		return
+	}
+
+	bra, ket := 0, l-1 // bracket positions
+	for i, r := range name {
+		switch {
+		case i != 0 && r == '@':
+			err = fmt.Errorf("invalid syntax: multiple @ signs found")
+			return
+		case r == '[' && bra > 0:
+			err = fmt.Errorf("invalid syntax: multiple open brackets found")
+			return
+		case r == ']' && i != ket:
+			err = fmt.Errorf("invalid syntax: multiple closed brackets found")
+			return
+		case r == '[':
+			bra = i
+		}
+	}
+
+	if bra == 0 || bra >= ket {
+		err = fmt.Errorf("invalid syntax: section selector must have format '@type[index]'")
+		return
+	}
+
+	typ = name[1:bra]
+	index, err = strconv.Atoi(name[bra+1 : ket])
+	return
+}
+
+func (c *config) getUnnamed(name string) (*section, error) {
+	typ, idx, err := unmangleSectionName(name)
+	if err != nil {
+		return nil, err
+	}
+
+	count := c.count(typ)
+	if -count > idx || idx >= count {
+		return nil, fmt.Errorf("invalid name: index out of bounds")
+	}
+	if idx < 0 {
+		idx += count // count from the end
+	}
+
+	for i, n := 0, 0; i < len(c.Sections); i++ {
+		if c.Sections[i].Type == typ {
+			if idx == n {
+				return c.Sections[i], nil
+			}
+			n++
+		}
+	}
+	return nil, nil
 }
 
 func (c *config) Add(s *section) {

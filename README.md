@@ -50,7 +50,6 @@ import "github.com/digineo/go-uci"
 func main() {
     // use the default tree (/etc/config)
     if values, ok := u.Get("system", "@system[0]", "hostname"); ok {
-        // TODO: "@type[index]" section selectors are not implemented yet.
         fmt.Println("hostanme", values)
         //=> hostname [OpenWRT]
     }
