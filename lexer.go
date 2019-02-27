@@ -192,16 +192,12 @@ func lexKeyword(l *lexer) stateFn {
 		l.ignore()
 		switch curr := l.rest(); {
 		case strings.HasPrefix(curr, string(kwPackage)):
-			l.emit(itemPackage)
 			return lexPackage
 		case strings.HasPrefix(curr, string(kwConfig)):
-			l.emit(itemConfig)
 			return lexConfig
 		case strings.HasPrefix(curr, string(kwOption)):
-			l.emit(itemOption)
 			return lexOption
 		case strings.HasPrefix(curr, string(kwList)):
-			l.emit(itemList)
 			return lexList
 		}
 		if l.next() == eof {
@@ -332,6 +328,7 @@ Loop:
 	}
 	l.backup()
 	l.emit(itemString)
+	l.consumeWhitespace()
 	l.accept("\n")
 	l.ignore()
 	return lexKeyword

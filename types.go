@@ -139,11 +139,12 @@ func (c *config) getUnnamed(name string) (*section, error) {
 	return nil, nil
 }
 
-func (c *config) Add(s *section) {
+func (c *config) Add(s *section) *section {
 	c.Sections = append(c.Sections, s)
+	return s
 }
 
-func (c *config) Merge(s *section) {
+func (c *config) Merge(s *section) *section {
 	var sec *section
 	for i := range c.Sections {
 		sname := c.sectionName(s)
@@ -156,12 +157,12 @@ func (c *config) Merge(s *section) {
 	}
 
 	if sec == nil {
-		c.Add(s)
-		return
+		return c.Add(s)
 	}
 	for _, o := range s.Options {
 		sec.Merge(o)
 	}
+	return sec
 }
 
 func (c *config) Del(name string) {
@@ -264,7 +265,7 @@ type option struct {
 }
 
 // newOption returns a new option object.
-func newOption(name string, values []string) *option {
+func newOption(name string, values ...string) *option {
 	return &option{
 		Name:   name,
 		Values: values,

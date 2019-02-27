@@ -140,18 +140,28 @@ func scanSection(s *scanner) scanFn {
 func scanOption(s *scanner) scanFn {
 	tok := s.next()
 	switch tok.typ {
-	case itemOption, itemList:
+	case itemOption:
 		return scanOptionName
+	case itemList:
+		return scanListName
 	default:
 		s.backup(tok)
 		return scanStart
 	}
 }
 
-// scanOptionName looks for a name of an option
+// scanOptionName looks for a name of a string option
 func scanOptionName(s *scanner) scanFn {
 	if s.accept(itemIdent) {
 		return scanOptionValue
+	}
+	return s.errorf("expected option name")
+}
+
+// scanListName looks for a name of a list option
+func scanListName(s *scanner) scanFn {
+	if s.accept(itemIdent) {
+		return scanListValue
 	}
 	return s.errorf("expected option name")
 }
@@ -160,6 +170,15 @@ func scanOptionName(s *scanner) scanFn {
 func scanOptionValue(s *scanner) scanFn {
 	if s.accept(itemString) {
 		s.emit(tokOption)
+		return scanOption
+	}
+	return s.errorf("expected option value")
+}
+
+// scanListValue looks for the value associated with an option
+func scanListValue(s *scanner) scanFn {
+	if s.accept(itemString) {
+		s.emit(tokList)
 		return scanOption
 	}
 	return s.errorf("expected option value")
@@ -185,16 +204,34 @@ func parse(name, input string) (cfg *config, err error) {
 		case tokPackage:
 			err = errors.New("UCI imports/exports are not yet supported")
 			return false
+
 		case tokSection:
+			name := tok.items[0].val
 			if len(tok.items) == 2 {
-				sec = newSection(tok.items[0].val, tok.items[1].val)
+				sec = cfg.Merge(newSection(name, tok.items[1].val))
 			} else {
-				sec = newSection(tok.items[0].val, "")
+				sec = cfg.Add(newSection(name, ""))
 			}
-			cfg.Merge(sec)
+
 		case tokOption:
-			opt := newOption(tok.items[0].val, []string{tok.items[1].val})
-			sec.Merge(opt)
+			name := tok.items[0].val
+			val := tok.items[1].val
+
+			if opt := sec.Get(name); opt != nil {
+				opt.SetValues(val)
+			} else {
+				sec.Add(newOption(name, val))
+			}
+
+		case tokList:
+			name := tok.items[0].val
+			val := tok.items[1].val
+
+			if opt := sec.Get(name); opt != nil {
+				opt.MergeValues(val)
+			} else {
+				sec.Add(newOption(name, val))
+			}
 		}
 		return true
 	})

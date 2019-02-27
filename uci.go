@@ -189,7 +189,7 @@ func (t *tree) Set(config, section, option string, values ...string) bool {
 	if opt := sec.Get(option); opt != nil {
 		opt.SetValues(values...)
 	} else {
-		sec.Add(newOption(option, values))
+		sec.Add(newOption(option, values...))
 	}
 	cfg.tainted = true
 	return true

@@ -80,8 +80,7 @@ func TestWriteConfig(t *testing.T) {
 				fmt.Fprint(os.Stderr, buf.String())
 			}
 
-			// expected := loadExpected(t, name)
-			// assert.EqualValues(expected, actual)
+			// TODO: validate content of buf
 		})
 	}
 }

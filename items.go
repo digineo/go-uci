@@ -94,7 +94,8 @@ const (
 
 	tokPackage // item-seq: (package, string)
 	tokSection // item-seq: (config, ident, maybe string)
-	tokOption  // item-seq: (option or list, ident, string)
+	tokOption  // item-seq: (option, ident, string)
+	tokList    // item-seq: (list, ident, string)
 )
 
 func (t scanToken) String() string {
@@ -109,6 +110,8 @@ func (t scanToken) String() string {
 		return "config"
 	case tokOption:
 		return "option"
+	case tokList:
+		return "list"
 	}
 	return fmt.Sprintf("%%scanToken(%d)", int(t))
 }

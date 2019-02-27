@@ -95,6 +95,27 @@ var lexerTests = []struct {
 		itemConfig.mk("config"), itemIdent.mk("foo"), itemString.mk("bar"),
 		itemOption.mk("option"), itemIdent.mk("answer"), itemString.mk("42"),
 	}},
+	{"unnamed", tcUnnamedInput, []item{
+		itemConfig.mk("config"), itemIdent.mk("foo"), itemString.mk("named"),
+		itemOption.mk("option"), itemIdent.mk("pos"), itemString.mk("0"),
+		itemOption.mk("option"), itemIdent.mk("unnamed"), itemString.mk("0"),
+		itemList.mk("list"), itemIdent.mk("list"), itemString.mk("0"),
+
+		itemConfig.mk("config"), itemIdent.mk("foo"), // unnamed
+		itemOption.mk("option"), itemIdent.mk("pos"), itemString.mk("1"),
+		itemOption.mk("option"), itemIdent.mk("unnamed"), itemString.mk("1"),
+		itemList.mk("list"), itemIdent.mk("list"), itemString.mk("10"),
+
+		itemConfig.mk("config"), itemIdent.mk("foo"), // unnamed
+		itemOption.mk("option"), itemIdent.mk("pos"), itemString.mk("2"),
+		itemOption.mk("option"), itemIdent.mk("unnamed"), itemString.mk("1"),
+		itemList.mk("list"), itemIdent.mk("list"), itemString.mk("20"),
+
+		itemConfig.mk("config"), itemIdent.mk("foo"), itemString.mk("named"),
+		itemOption.mk("option"), itemIdent.mk("pos"), itemString.mk("3"),
+		itemOption.mk("option"), itemIdent.mk("unnamed"), itemString.mk("0"),
+		itemList.mk("list"), itemIdent.mk("list"), itemString.mk("30"),
+	}},
 }
 
 var parserTests = []struct {
@@ -117,5 +138,26 @@ var parserTests = []struct {
 	{"unquoted", tcUnquotedInput, []token{
 		tokSection.mk(itemIdent.mk("foo"), itemString.mk("bar")),
 		tokOption.mk(itemIdent.mk("answer"), itemString.mk("42")),
+	}},
+	{"unnamed", tcUnnamedInput, []token{
+		tokSection.mk(itemIdent.mk("foo"), itemString.mk("named")),
+		tokOption.mk(itemIdent.mk("pos"), itemString.mk("0")),
+		tokOption.mk(itemIdent.mk("unnamed"), itemString.mk("0")),
+		tokList.mk(itemIdent.mk("list"), itemString.mk("0")),
+
+		tokSection.mk(itemIdent.mk("foo")), // unnamed
+		tokOption.mk(itemIdent.mk("pos"), itemString.mk("1")),
+		tokOption.mk(itemIdent.mk("unnamed"), itemString.mk("1")),
+		tokList.mk(itemIdent.mk("list"), itemString.mk("10")),
+
+		tokSection.mk(itemIdent.mk("foo")), // unnamed
+		tokOption.mk(itemIdent.mk("pos"), itemString.mk("2")),
+		tokOption.mk(itemIdent.mk("unnamed"), itemString.mk("1")),
+		tokList.mk(itemIdent.mk("list"), itemString.mk("20")),
+
+		tokSection.mk(itemIdent.mk("foo"), itemString.mk("named")),
+		tokOption.mk(itemIdent.mk("pos"), itemString.mk("3")),
+		tokOption.mk(itemIdent.mk("unnamed"), itemString.mk("0")),
+		tokList.mk(itemIdent.mk("list"), itemString.mk("30")),
 	}},
 }
