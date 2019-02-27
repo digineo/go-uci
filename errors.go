@@ -12,8 +12,8 @@ func (err ErrConfigAlreadyLoaded) Error() string {
 	return fmt.Sprintf("%s already loaded", err.Name)
 }
 
-// IsConfigAlredyLoaded reports, whether err is of type ErrConfigAlredyLoaded.
-func IsConfigAlredyLoaded(err error) bool {
+// IsConfigAlreadyLoaded reports, whether err is of type ErrConfigAlredyLoaded.
+func IsConfigAlreadyLoaded(err error) bool {
 	if err == nil {
 		return false
 	}
