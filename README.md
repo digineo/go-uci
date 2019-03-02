@@ -3,6 +3,9 @@
 > **WORK IN PROGRESS**
 
 [![GoDoc][godoc-badge]][godoc]
+[![CircleCI](https://circleci.com/gh/digineo/go-uci/tree/master.svg?style=shield)](https://circleci.com/gh/digineo/go-uci/tree/master)
+[![Codecov](http://codecov.io/github/digineo/go-uci/coverage.svg?branch=master)](http://codecov.io/github/digineo/go-uci?branch=master)
+
 
 [godoc]:       https://godoc.org/github.com/digineo/go-uci
 [godoc-badge]: https://godoc.org/github.com/digineo/go-uci?status.svg
