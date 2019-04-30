@@ -34,6 +34,10 @@ type Tree interface {
 	// internal memory and does not access the file system.
 	Revert(configs ...string)
 
+	// GetSections returns the names of all sections of a certain type
+	// in a config, and a boolean indicating whether the config file exists.
+	GetSections(config string, secType string) ([]string, bool)
+
 	// Get retrieves (all) values for a fully qualified option, and a
 	// boolean indicating whether the config file and the config section
 	// within exists.
@@ -127,6 +131,22 @@ func (t *tree) Revert(configs ...string) {
 	t.Unlock()
 }
 
+func (t *tree) GetSections(config string, secType string) ([]string, bool) {
+	cfg, exists := t.ensureConfigLoaded(config)
+	if !exists {
+		return nil, false
+	}
+
+	names := []string{}
+	for _, s := range cfg.Sections {
+		if s.Type == secType {
+			names = append(names, cfg.sectionName(s))
+		}
+	}
+
+	return names, true
+}
+
 func (t *tree) Get(config, section, option string) ([]string, bool) {
 	t.Lock()
 	defer t.Unlock()
@@ -147,7 +167,7 @@ func (t *tree) ensureConfigLoaded(config string) (*config, bool) {
 		}
 		cfg = t.configs[config]
 	}
-	return cfg, loaded
+	return cfg, true
 }
 
 func (t *tree) lookupOption(config, section, option string) (*option, bool) {

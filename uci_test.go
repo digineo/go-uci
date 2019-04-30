@@ -84,3 +84,17 @@ func TestWriteConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestGetSections(t *testing.T) {
+	assert := assert.New(t)
+
+	r := NewTree("testdata")
+
+	names, exists := r.GetSections("system", "system")
+	assert.True(exists)
+	assert.ElementsMatch(names, []string{"@system[1]"})
+
+	names, exists = r.GetSections("system", "timeserver")
+	assert.True(exists)
+	assert.ElementsMatch(names, []string{"ntp"})
+}
