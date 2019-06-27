@@ -98,3 +98,31 @@ func TestGetSections(t *testing.T) {
 	assert.True(exists)
 	assert.ElementsMatch(names, []string{"ntp"})
 }
+
+func TestSingleDelete(t *testing.T) {
+	assert := assert.New(t)
+
+	r := NewTree("testdata")
+
+	val, _ := r.Get("system", "ntp", "enable_server")
+	assert.NotEmpty(val)
+
+	r.Del("system", "ntp", "enable_server")
+
+	val, _ = r.Get("system", "ntp", "enable_server")
+	assert.Empty(val)
+}
+
+func TestListDelete(t *testing.T) {
+	assert := assert.New(t)
+
+	r := NewTree("testdata")
+
+	val, _ := r.Get("system", "ntp", "server")
+	assert.NotEmpty(val)
+
+	r.Del("system", "ntp", "server")
+
+	val, _ = r.Get("system", "ntp", "server")
+	assert.Empty(val)
+}

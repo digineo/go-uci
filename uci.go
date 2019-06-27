@@ -225,11 +225,13 @@ func (t *tree) Del(config, section, option string) {
 		// nor config do exist. hence, we've reached our desired state
 		return
 	}
+
 	sec := cfg.Get(section)
 	if sec == nil {
 		// same logic applies here
 		return
 	}
+
 	if sec.Del(option) {
 		cfg.tainted = true
 	}

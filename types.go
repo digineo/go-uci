@@ -234,16 +234,13 @@ func (s *section) Del(name string) bool {
 			break
 		}
 	}
-	switch l := len(s.Options); {
-	case i == 0: // at the end, cut tail
-		s.Options = s.Options[i+1:]
-	case i == l-1: // at the beginning, move head
-		s.Options = s.Options[:l]
-	case i < l: // somewhere in the middle; move items around
-		s.Options = append(s.Options[:i], s.Options[i+1:]...)
-	default: // i == l; option does not exist
+
+	if i == len(s.Options) {
 		return false
 	}
+
+	s.Options = append(s.Options[:i], s.Options[i+1:]...)
+
 	return true
 }
 
