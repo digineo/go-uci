@@ -54,7 +54,7 @@ func TestLoadConfig(t *testing.T) {
 			actual := r.(*tree).configs[name]
 
 			if dump["json"] {
-				json.NewEncoder(os.Stderr).Encode(actual)
+				assert.NoError(json.NewEncoder(os.Stderr).Encode(actual))
 			}
 
 			expected := loadExpected(t, name)

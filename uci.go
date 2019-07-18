@@ -158,7 +158,9 @@ func (t *tree) Get(config, section, option string) ([]string, bool) {
 		return vals, true
 	}
 
-	t.loadConfig(config)
+	if err := t.loadConfig(config); err != nil {
+		return nil, false
+	}
 	return t.lookupValues(config, section, option)
 }
 
@@ -304,7 +306,11 @@ func (t *tree) saveConfig(c *config) error {
 		os.Remove(f.Name())
 		return err
 	}
-	f.Sync()
+	if err = f.Sync(); err != nil {
+		f.Close()
+		os.Remove(f.Name())
+		return err
+	}
 	f.Close()
 
 	if err = os.Rename(f.Name(), filepath.Join(t.dir, c.Name)); err != nil {

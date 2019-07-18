@@ -133,7 +133,7 @@ func (l *lexer) peek() rune {
 //
 // https://talks.golang.org/2011/lex.slide#34
 func (l *lexer) accept(valid string) bool {
-	if strings.IndexRune(valid, l.next()) >= 0 {
+	if strings.ContainsRune(valid, l.next()) {
 		return true
 	}
 	l.backup()
@@ -144,7 +144,7 @@ func (l *lexer) accept(valid string) bool {
 //
 // https://talks.golang.org/2011/lex.slide#34
 func (l *lexer) acceptRun(valid string) {
-	for strings.IndexRune(valid, l.next()) >= 0 {
+	for strings.ContainsRune(valid, l.next()) {
 	}
 	l.backup()
 }
@@ -246,7 +246,6 @@ func lexOptionalName(l *lexer) stateFn {
 	switch r := l.next(); {
 	case r == '\n':
 		l.ignore()
-		break
 	case r == '"' || r == '\'':
 		l.backup()
 		return lexQuoted
