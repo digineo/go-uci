@@ -275,8 +275,19 @@ func (t *tree) DelSection(config, section string) {
 }
 
 func (t *tree) saveConfig(c *config) error {
-	// f has O_RDWR|O_CREAT|O_EXCL + 0600
-	f, err := ioutil.TempFile("", c.Name)
+	// We need to create a tempfile in the tree's base directory, since
+	// os.Rename fails when that directory and ioutil.Tempdir are on
+	// different file systems (os.Rename being not much more than a shim
+	// for syscall.Renameat).
+	//
+	// The full path for f will hence be "$root/.$rnd.$name", which
+	// translates to something like "/etc/config/.42.network" on
+	// OpenWRT devices.
+	//
+	// We rely a bit on the fact that UCI ignores dotfiles in /etc/config,
+	// so this should not interfere with normal operations when we leave
+	// incomplete files behind (for whatever reason).
+	f, err := ioutil.TempFile(t.dir, ".*."+c.Name)
 	if err != nil {
 		return err
 	}
