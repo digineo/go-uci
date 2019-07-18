@@ -10,10 +10,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// // defaultTree is a convenient accessor to the UCI default location
-// // at /etc/config.
-// var defaultTree = NewTree("/etc/config")
-
+// mockTree implements the Tree interface and an instance replaces the
+// global defaultTree (see TestMain).
 type mockTree struct {
 	mock.Mock
 }
