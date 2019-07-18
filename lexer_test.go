@@ -6,7 +6,8 @@ import (
 )
 
 func TestLexer(t *testing.T) {
-	for _, tc := range lexerTests {
+	for i := range lexerTests {
+		tc := lexerTests[i]
 		t.Run(tc.name, func(t *testing.T) {
 			testLexer(t, tc.name, tc.input, tc.expected)
 		})

@@ -26,7 +26,7 @@ type Tree interface {
 	//
 	// Note: this is not transaction safe. If, for whatever reason, the
 	// writing of any file fails, the succeeding files are left untouched
-	// while the preceeding files are not reverted.
+	// while the preceding files are not reverted.
 	Commit() error
 
 	// Revert undoes changes to the config files given as arguments. If

@@ -45,6 +45,7 @@ func TestLoadConfig(t *testing.T) {
 	assert := assert.New(t)
 
 	for _, name := range []string{"system", "emptyfile", "emptysection", "luci", "ucitrack"} {
+		name := name
 		t.Run(name, func(t *testing.T) {
 			r := NewTree("testdata")
 			err := r.LoadConfig(name, false)
@@ -65,7 +66,9 @@ func TestLoadConfig(t *testing.T) {
 func TestWriteConfig(t *testing.T) {
 	assert := assert.New(t)
 
-	for _, name := range []string{"system", "emptyfile", "emptysection", "luci", "ucitrack"} {
+	tt := []string{"system", "emptyfile", "emptysection", "luci", "ucitrack"}
+	for i := range tt {
+		name := tt[i]
 		t.Run(name, func(t *testing.T) {
 			r := NewTree("testdata")
 			err := r.LoadConfig(name, false)

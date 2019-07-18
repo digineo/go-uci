@@ -8,7 +8,7 @@ import (
 
 const eof = -1
 
-// stateFn represents the state of the scanner as a funtion that returns
+// stateFn represents the state of the scanner as a function that returns
 // the next state.
 //
 // https://talks.golang.org/2011/lex.slide#19, #27 and following

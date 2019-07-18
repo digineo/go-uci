@@ -15,20 +15,20 @@ import (
 // something like
 //
 //	DUMP="lex,token" go test -v ./...
-var dump = make(map[string]bool)
-
-func init() {
+var dump = func() map[string]bool {
+	var m = make(map[string]bool)
 	for _, field := range strings.Split(os.Getenv("DUMP"), ",") {
 		if field == "all" {
-			dump["json"] = true
-			dump["token"] = true
-			dump["lex"] = true
-			dump["serialized"] = true
+			m["json"] = true
+			m["token"] = true
+			m["lex"] = true
+			m["serialized"] = true
 		} else {
-			dump[field] = true
+			m[field] = true
 		}
 	}
-}
+	return m
+}()
 
 func (t scanToken) mk(items ...item) token {
 	return token{t, items}

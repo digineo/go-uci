@@ -6,7 +6,8 @@ import (
 )
 
 func TestParser(t *testing.T) {
-	for _, tc := range parserTests {
+	for i := range parserTests {
+		tc := parserTests[i]
 		t.Run(tc.name, func(t *testing.T) {
 			testParser(t, tc.name, tc.input, tc.expected)
 		})

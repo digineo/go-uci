@@ -32,7 +32,8 @@ func TestUnmangleSectionName(t *testing.T) {
 		"@abcdEFGHijkl[0xff]": {err: `strconv.Atoi: parsing "0xff": invalid syntax`},
 	}
 
-	for input, tc := range tt {
+	for input := range tt {
+		input, tc := input, tt[input]
 		t.Run(input, func(t *testing.T) {
 			assert := assert.New(t)
 			typ, idx, err := unmangleSectionName(input)
@@ -55,49 +56,51 @@ func TestConfigGet(t *testing.T) {
 	cases := []*section{
 		// for fun, tcUnnamedInput starts with a named section. for extra
 		// fun, tcUnnamedInput extends the named section at the end.
-		&section{"named", "foo", []*option{
+		{"named", "foo", []*option{
 			newOption("pos", "3"), // gets overwritten by last section
 			newOption("unnamed", "0"),
 			newOption("list", "0", "30"), // gets merged with last section
 		}},
 
 		// the @foo[0] selector only compares type (foo) and index (0)
-		&section{"@foo[0]", "foo", []*option{ // alias for "named"
+		{"@foo[0]", "foo", []*option{ // alias for "named"
 			newOption("pos", "3"),
 			newOption("unnamed", "0"),
 			newOption("list", "0", "30"),
 		}},
-		&section{"@foo[1]", "foo", []*option{
+		{"@foo[1]", "foo", []*option{
 			newOption("pos", "1"),
 			newOption("unnamed", "1"),
 			newOption("list", "10"),
 		}},
-		&section{"@foo[2]", "foo", []*option{
+		{"@foo[2]", "foo", []*option{
 			newOption("pos", "2"),
 			newOption("unnamed", "1"),
 			newOption("list", "20"),
 		}},
 
 		// negative indices count from the end
-		&section{"@foo[-3]", "foo", []*option{ // alias for "@foo[0]" == "named"
+		{"@foo[-3]", "foo", []*option{ // alias for "@foo[0]" == "named"
 			newOption("pos", "3"),
 			newOption("unnamed", "0"),
 			newOption("list", "0", "30"),
 		}},
-		&section{"@foo[-2]", "foo", []*option{ // alias for "@foo[1]"
+		{"@foo[-2]", "foo", []*option{ // alias for "@foo[1]"
 			newOption("pos", "1"),
 			newOption("unnamed", "1"),
 			newOption("list", "10"),
 		}},
-		&section{"@foo[-1]", "foo", []*option{ // alias for "@foo[2]"
+		{"@foo[-1]", "foo", []*option{ // alias for "@foo[2]"
 			newOption("pos", "2"),
 			newOption("unnamed", "1"),
 			newOption("list", "20"),
 		}},
 	}
 
-	for _, s := range cases {
-		for _, o := range s.Options {
+	for i := range cases {
+		s := cases[i]
+		for j := range s.Options {
+			o := s.Options[j]
 			t.Run("unnamed."+s.Name+"."+o.Name, func(t *testing.T) {
 				sec := config.Get(s.Name)
 				if !assert.NotNil(t, sec) {

@@ -97,7 +97,7 @@ func (s *scanner) emit(typ scanToken) {
 func (s *scanner) errorf(format string, args ...interface{}) scanFn {
 	s.tokens <- token{
 		typ:   tokError,
-		items: []item{item{itemError, fmt.Sprintf(format, args...), 0}},
+		items: []item{{itemError, fmt.Sprintf(format, args...), 0}},
 	}
 	return nil
 }
@@ -235,5 +235,5 @@ func parse(name, input string) (cfg *config, err error) {
 		}
 		return true
 	})
-	return
+	return cfg, err
 }

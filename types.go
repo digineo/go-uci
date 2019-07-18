@@ -111,7 +111,7 @@ func unmangleSectionName(name string) (typ string, index int, err error) {
 
 	typ = name[1:bra]
 	index, err = strconv.Atoi(name[bra+1 : ket])
-	return
+	return typ, index, err
 }
 
 func (c *config) getUnnamed(name string) (*section, error) {
