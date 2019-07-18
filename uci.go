@@ -115,7 +115,10 @@ func (t *tree) Commit() error {
 		if !config.tainted {
 			continue
 		}
-		t.saveConfig(config)
+		err := t.saveConfig(config)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
