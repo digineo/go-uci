@@ -19,6 +19,11 @@ func Revert(configs ...string) {
 	defaultTree.Revert(configs...)
 }
 
+// GetSections delegates to the default tree. See Tree for details.
+func GetSections(config, secType string) ([]string, bool) {
+	return defaultTree.GetSections(config, secType)
+}
+
 // Get delegates to the default tree. See Tree for details.
 func Get(config, section, option string) ([]string, bool) {
 	return defaultTree.Get(config, section, option)

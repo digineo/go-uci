@@ -36,7 +36,7 @@ type Tree interface {
 
 	// GetSections returns the names of all sections of a certain type
 	// in a config, and a boolean indicating whether the config file exists.
-	GetSections(config string, secType string) ([]string, bool)
+	GetSections(config, secType string) ([]string, bool)
 
 	// Get retrieves (all) values for a fully qualified option, and a
 	// boolean indicating whether the config file and the config section
