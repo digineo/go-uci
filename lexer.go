@@ -149,11 +149,11 @@ func (l *lexer) acceptRun(valid string) {
 	l.backup()
 }
 
-// acceptIdent consumes an UCI identifier [_a-zA-Z].
+// acceptIdent consumes an UCI identifier [-_a-zA-Z0-9].
 func (l *lexer) acceptIdent() {
 	for {
 		r := l.next()
-		if !(r == '_' || 'a' <= r && r <= 'z' || 'A' <= r && r <= 'Z') {
+		if !(r == '-' || r == '_' || 'a' <= r && r <= 'z' || 'A' <= r && r <= 'Z' || '0' <= r && r <= '9') {
 			l.backup()
 			break
 		}

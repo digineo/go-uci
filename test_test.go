@@ -74,6 +74,16 @@ config foo named
 	list list 30
 `
 
+const tcHyphenatedInput = `
+config wifi-device wl0
+	option type    'broadcom'
+	option channel '6'
+
+config wifi-iface wifi0
+	option device 'wl0'
+	option mode 'ap'
+`
+
 var lexerTests = []struct {
 	name, input string
 	expected    []item
@@ -115,6 +125,14 @@ var lexerTests = []struct {
 		itemOption.mk("option"), itemIdent.mk("pos"), itemString.mk("3"),
 		itemOption.mk("option"), itemIdent.mk("unnamed"), itemString.mk("0"),
 		itemList.mk("list"), itemIdent.mk("list"), itemString.mk("30"),
+	}},
+	{"hyphenated", tcHyphenatedInput, []item{
+		itemConfig.mk("config"), itemIdent.mk("wifi-device"), itemString.mk("wl0"),
+		itemOption.mk("option"), itemIdent.mk("type"), itemString.mk("broadcom"),
+		itemOption.mk("option"), itemIdent.mk("channel"), itemString.mk("6"),
+		itemConfig.mk("config"), itemIdent.mk("wifi-iface"), itemString.mk("wifi0"),
+		itemOption.mk("option"), itemIdent.mk("device"), itemString.mk("wl0"),
+		itemOption.mk("option"), itemIdent.mk("mode"), itemString.mk("ap"),
 	}},
 }
 
