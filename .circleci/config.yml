@@ -3,19 +3,34 @@
 # Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
 jobs:
-  build:
+  .common: &common
     docker:
       - image: circleci/golang:1.12
-
     working_directory: /go/src/github.com/digineo/go-uci
+    steps:
+      - run: echo this is a dummy step
+
+  # run tests and report coverage
+  test:
+    <<: *common
     steps:
       - checkout
       - run: go get -v -t -d ./...
-
-      # run tests and report coverage
       - run: go test -v -cover -race -coverprofile=coverage.txt ./...
       - run: bash <(curl -s https://codecov.io/bash)
 
-      # install and run golangci-lint
+  # install and run golangci-lint
+  lint:
+    <<: *common
+    steps:
+      - checkout
+      - run: go get -v -t -d ./...
       - run: curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s latest
       - run: ./bin/golangci-lint run
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - test
+      - lint
