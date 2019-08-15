@@ -203,7 +203,7 @@ func (t *tree) lookupOption(config, section, option string) (*option, bool) {
 	}
 	sec := cfg.Get(section)
 	if sec == nil {
-		return nil, true
+		return nil, false
 	}
 	return sec.Get(option), true
 }

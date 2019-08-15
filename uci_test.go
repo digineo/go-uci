@@ -102,6 +102,29 @@ func TestGetSections(t *testing.T) {
 	assert.ElementsMatch(names, []string{"ntp"})
 }
 
+func TestGet(t *testing.T) {
+	assert := assert.New(t)
+
+	r := NewTree("testdata")
+
+	values, exists := r.Get("system", "ntp", "server")
+	assert.True(exists)
+	assert.ElementsMatch(values, []string{
+		"0.lede.pool.ntp.org",
+		"1.lede.pool.ntp.org",
+		"2.lede.pool.ntp.org",
+		"3.lede.pool.ntp.org",
+	})
+
+	values, exists = r.Get("system", "@system[0]", "timezone")
+	assert.True(exists)
+	assert.ElementsMatch(values, []string{"UTC"})
+
+	values, exists = r.Get("system", "nonexistent", "foo")
+	assert.False(exists)
+	assert.Nil(values)
+}
+
 func TestSingleDelete(t *testing.T) {
 	assert := assert.New(t)
 
