@@ -247,4 +247,18 @@ var parserTests = []struct {
 		tokOption.mk(itemIdent.mk("opt2"), itemString.mk("3")),
 		tokOption.mk(itemIdent.mk("opt3"), itemString.mk("hello")),
 	}},
+	{"invalid", tcInvalid, []token{
+		tokError.mk(itemError.mk("expected keyword (package, config, option, list) or eof")),
+	}},
+	{"pkg invalid", tcIncompletePackage, []token{
+		tokError.mk(itemError.mk("incomplete package name")),
+	}},
+	{"unterminated quoted string", tcUnterminatedQuoted, []token{
+		tokSection.mk(itemIdent.mk("foo")),
+		tokError.mk(itemError.mk("unterminated quoted string")),
+	}},
+	{"unterminated unquoted string", tcUnterminatedUnquoted, []token{
+		tokSection.mk(itemIdent.mk("foo")),
+		tokError.mk(itemError.mk("unterminated unquoted string")),
+	}},
 }

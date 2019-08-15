@@ -29,7 +29,7 @@ func scan(name, input string) *scanner {
 }
 
 func (s *scanner) nextToken() token {
-	for {
+	for s.state != nil {
 		select {
 		case tok, ok := <-s.tokens:
 			if ok {
@@ -38,26 +38,31 @@ func (s *scanner) nextToken() token {
 			return s.eof()
 		default:
 			st := s.state(s)
-			if st == nil {
-				s.stop()
-				return s.eof()
-			}
 			s.state = st
+			if st == nil {
+				return s.stop()
+			}
 		}
 	}
+	return s.eof()
 }
 
 func (s *scanner) eof() token {
 	return token{typ: tokEOF}
 }
 
-func (s *scanner) stop() {
+func (s *scanner) stop() token {
+	tok := s.eof()
 	if s.tokens == nil {
-		return
+		return tok
 	}
 	s.lexer.stop()
+	if len(s.tokens) > 0 {
+		tok = <-s.tokens
+	}
 	close(s.tokens)
 	s.tokens = nil
+	return tok
 }
 
 func (s *scanner) next() item {
@@ -104,48 +109,62 @@ func (s *scanner) errorf(format string, args ...interface{}) scanFn {
 
 // scanStart looks for a "package" or "config" item.
 func scanStart(s *scanner) scanFn {
-	switch tok := s.next(); tok.typ {
+	switch it := s.next(); it.typ {
 	case itemPackage:
 		return scanPackage
 	case itemConfig:
 		return scanSection
+	case itemError:
+		return s.errorf(it.val)
+	case itemEOF:
+		return nil
 	}
 	return s.errorf("expected package or config token")
 }
 
 // scanPackage looks for a package name
 func scanPackage(s *scanner) scanFn {
-	if !s.accept(itemString) {
-		return s.errorf("expected string value while parsing package")
+	switch it := s.next(); it.typ {
+	case itemString:
+		s.curr = append(s.curr, it)
+		s.emit(tokPackage)
+		return scanStart
+	case itemError:
+		return s.errorf(it.val)
 	}
-	s.emit(tokPackage)
-	return scanStart
+	return s.errorf("expected string value while parsing package")
 }
 
 // scanSection looks for a section type and optional a name
 func scanSection(s *scanner) scanFn {
-	if !s.accept(itemIdent) {
-		return s.errorf("expected identifier while parsing config section")
+	switch it := s.next(); it.typ {
+	case itemIdent:
+		s.curr = append(s.curr, it)
+		// the name is optional
+		if tok := s.peek(); tok.typ == itemString {
+			s.accept(itemString)
+		}
+		s.emit(tokSection)
+		return scanOption
+	case itemError:
+		return s.errorf(it.val)
 	}
-	// the name is optional
-	if tok := s.peek(); tok.typ == itemString {
-		s.accept(itemString)
-	}
-	s.emit(tokSection)
-	return scanOption
+	return s.errorf("expected identifier while parsing config section")
 }
 
 // scanOption looks for either an "option" or "list" keyword (with name
 // and value), or it falls back to scanStart
 func scanOption(s *scanner) scanFn {
-	tok := s.next()
-	switch tok.typ {
+	it := s.next()
+	switch it.typ {
 	case itemOption:
 		return scanOptionName
 	case itemList:
 		return scanListName
+	case itemError:
+		return s.errorf(it.val)
 	default:
-		s.backup(tok)
+		s.backup(it)
 		return scanStart
 	}
 }
@@ -168,18 +187,26 @@ func scanListName(s *scanner) scanFn {
 
 // scanOptionValue looks for the value associated with an option
 func scanOptionValue(s *scanner) scanFn {
-	if s.accept(itemString) {
+	switch it := s.next(); it.typ {
+	case itemString:
+		s.curr = append(s.curr, it)
 		s.emit(tokOption)
 		return scanOption
+	case itemError:
+		return s.errorf(it.val)
 	}
 	return s.errorf("expected option value")
 }
 
 // scanListValue looks for the value associated with an option
 func scanListValue(s *scanner) scanFn {
-	if s.accept(itemString) {
+	switch it := s.next(); it.typ {
+	case itemString:
+		s.curr = append(s.curr, it)
 		s.emit(tokList)
 		return scanOption
+	case itemError:
+		return s.errorf(it.val)
 	}
 	return s.errorf("expected option value")
 }
