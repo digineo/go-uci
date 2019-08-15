@@ -84,13 +84,20 @@ func TestLoadConfig_forceReload(t *testing.T) {
 	assert.NoError(err)
 }
 
-func TestWriteConfig(t *testing.T) {
+func TestLoadConfig_invalidFile(t *testing.T) {
 	assert := assert.New(t)
+	r := NewTree("testdata")
 
+	err := r.LoadConfig("invalid", false)
+	assert.True(IsParseError(err))
+}
+
+func TestWriteConfig(t *testing.T) {
 	tt := []string{"system", "emptyfile", "emptysection", "luci", "ucitrack"}
 	for i := range tt {
 		name := tt[i]
 		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
 			r := NewTree("testdata")
 			err := r.LoadConfig(name, false)
 			assert.NoError(err)

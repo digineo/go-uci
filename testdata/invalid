@@ -1,0 +1,4 @@
+<?xml version="1.0" ?>
+<error>
+  <message>this is not a UCI config file</message>
+</error>
