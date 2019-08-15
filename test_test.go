@@ -106,6 +106,19 @@ const tcInvalid = `
 <error message="not a UCI file" />
 `
 
+const tcIncompletePackage = `
+package
+`
+
+const tcUnterminatedQuoted = `
+config foo "bar
+`
+
+const tcUnterminatedUnquoted = `
+config foo
+	option opt opt\
+`
+
 var lexerTests = []struct {
 	name, input string
 	expected    []item
@@ -164,6 +177,17 @@ var lexerTests = []struct {
 	}},
 	{"invalid", tcInvalid, []item{
 		itemError.mk("expected keyword (package, config, option, list) or eof"),
+	}},
+	{"pkg invalid", tcIncompletePackage, []item{
+		itemPackage.mk("package"),
+		itemError.mk("incomplete package name"),
+	}},
+	{"unterminated quoted string", tcUnterminatedQuoted, []item{
+		itemConfig.mk("config"), itemIdent.mk("foo"), itemError.mk("unterminated quoted string"),
+	}},
+	{"unterminated unquoted string", tcUnterminatedUnquoted, []item{
+		itemConfig.mk("config"), itemIdent.mk("foo"), // unnamed
+		itemOption.mk("option"), itemIdent.mk("opt"), itemError.mk("unterminated unquoted string"),
 	}},
 }
 
