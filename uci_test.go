@@ -100,6 +100,10 @@ func TestGetSections(t *testing.T) {
 	names, exists = r.GetSections("system", "timeserver")
 	assert.True(exists)
 	assert.ElementsMatch(names, []string{"ntp"})
+
+	names, exists = r.GetSections("nonexistent", "foo")
+	assert.False(exists)
+	assert.Nil(names)
 }
 
 func TestGet(t *testing.T) {
