@@ -157,6 +157,34 @@ func TestGet(t *testing.T) {
 	assert.Nil(values)
 }
 
+func TestDel(t *testing.T) {
+	assert := assert.New(t)
+	r := NewTree("testdata")
+
+	values, _ := r.Get("system", "ntp", "enabled")
+	assert.ElementsMatch(values, []string{"1"})
+	r.Del("system", "ntp", "enabled")
+	values, _ = r.Get("system", "ntp", "enabled")
+	assert.ElementsMatch(values, []string{})
+
+	_, exists := r.Get("system", "nonexistent", "foo")
+	assert.False(exists)
+	r.Del("system", "nonexistent", "foo")
+	_, exists = r.Get("system", "nonexistent", "foo")
+	assert.False(exists)
+
+	_, exists = r.Get("nonexistent", "foo", "bar")
+	assert.False(exists)
+	r.Del("nonexistent", "foo", "bar")
+	_, exists = r.Get("nonexistent", "foo", "bar")
+	assert.False(exists)
+
+	// without prior loading
+	r.Del("nonexistent2", "foo2", "bar2")
+	_, exists = r.Get("nonexistent2", "foo2", "bar2")
+	assert.False(exists)
+}
+
 func TestSingleDelete(t *testing.T) {
 	assert := assert.New(t)
 
