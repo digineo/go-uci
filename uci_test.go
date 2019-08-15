@@ -185,20 +185,6 @@ func TestDel(t *testing.T) {
 	assert.False(exists)
 }
 
-func TestSingleDelete(t *testing.T) {
-	assert := assert.New(t)
-
-	r := NewTree("testdata")
-
-	val, _ := r.Get("system", "ntp", "enable_server")
-	assert.NotEmpty(val)
-
-	r.Del("system", "ntp", "enable_server")
-
-	val, _ = r.Get("system", "ntp", "enable_server")
-	assert.Empty(val)
-}
-
 func TestListDelete(t *testing.T) {
 	assert := assert.New(t)
 
