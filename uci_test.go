@@ -129,3 +129,34 @@ func TestListDelete(t *testing.T) {
 	val, _ = r.Get("system", "ntp", "server")
 	assert.Empty(val)
 }
+
+func TestGetBool_False(t *testing.T) {
+	assert := assert.New(t)
+
+	r := NewTree("testdata")
+
+	val, ok := r.GetBool("wireless", "guest_radio0", "disabled")
+	assert.True(ok)
+
+	assert.False(val)
+}
+
+func TestGetBool_True(t *testing.T) {
+	assert := assert.New(t)
+
+	r := NewTree("testdata")
+
+	val, ok := r.GetBool("wireless", "guest_radio1", "disabled")
+	assert.True(ok)
+
+	assert.True(val)
+}
+
+func TestGetBool_Other(t *testing.T) {
+	assert := assert.New(t)
+
+	r := NewTree("testdata")
+
+	_, ok := r.GetBool("wireless", "guest_radio0", "mode")
+	assert.False(ok)
+}

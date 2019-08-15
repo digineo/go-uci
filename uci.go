@@ -43,6 +43,11 @@ type Tree interface {
 	// within exists.
 	Get(config, section, option string) ([]string, bool)
 
+	// GetBool works the same way as Get does but interprets the last
+	// specified value as a boolean.  If the found value can't be
+	// interpreted as either true or false, it will return nil and false.
+	GetBool(config, section, option string) (bool, bool)
+
 	// Set replaces the fully qualified option with the given values. It
 	// returns whether the config file and section exists. For new files
 	// and sections, you first need to initialize them with AddSection().
@@ -162,6 +167,22 @@ func (t *tree) Get(config, section, option string) ([]string, bool) {
 		return nil, false
 	}
 	return t.lookupValues(config, section, option)
+}
+
+func (t *tree) GetBool(config, section, option string) (bool, bool) {
+	vals, ok := t.Get(config, section, option)
+	if !ok || len(vals) == 0 {
+		return false, false
+	}
+
+	switch vals[len(vals)-1] {
+	case "1", "on", "true", "yes", "enabled":
+		return true, true
+	case "0", "off", "false", "no", "disabled":
+		return false, true
+	default:
+		return false, false
+	}
 }
 
 func (t *tree) ensureConfigLoaded(config string) (*config, bool) {

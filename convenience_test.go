@@ -40,6 +40,11 @@ func (m *mockTree) Get(config, section, option string) ([]string, bool) {
 	return []string{args.String(0)}, args.Bool(1)
 }
 
+func (m *mockTree) GetBool(config, section, option string) (bool, bool) {
+	args := m.Called(config, section, option)
+	return args.Bool(0), args.Bool(1)
+}
+
 func (m *mockTree) Set(config, section, option string, values ...string) bool {
 	args := m.Called(config, section, option, values)
 	return args.Bool(0)
