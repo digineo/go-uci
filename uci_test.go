@@ -42,11 +42,11 @@ func loadExpected(t *testing.T, name string) *config {
 }
 
 func TestLoadConfig(t *testing.T) {
-	assert := assert.New(t)
-
-	for _, name := range []string{"system", "emptyfile", "emptysection", "luci", "ucitrack"} {
-		name := name
+	tt := []string{"system", "emptyfile", "emptysection", "luci", "ucitrack"}
+	for i := range tt {
+		name := tt[i]
 		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
 			r := NewTree("testdata")
 			err := r.LoadConfig(name, false)
 			assert.NoError(err)
@@ -61,6 +61,27 @@ func TestLoadConfig(t *testing.T) {
 			assert.EqualValues(expected, actual)
 		})
 	}
+}
+
+func TestLoadConfig_nonExistent(t *testing.T) {
+	assert := assert.New(t)
+	r := NewTree("testdata")
+	err := r.LoadConfig("nonexistent", false)
+	assert.True(os.IsNotExist(err))
+}
+
+func TestLoadConfig_forceReload(t *testing.T) {
+	assert := assert.New(t)
+	r := NewTree("testdata")
+
+	err := r.LoadConfig("system", false)
+	assert.NoError(err)
+
+	err = r.LoadConfig("system", false)
+	assert.True(IsConfigAlreadyLoaded(err))
+
+	err = r.LoadConfig("system", true)
+	assert.NoError(err)
 }
 
 func TestWriteConfig(t *testing.T) {

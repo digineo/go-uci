@@ -17,7 +17,7 @@ func IsConfigAlreadyLoaded(err error) bool {
 	if err == nil {
 		return false
 	}
-	_, is := err.(*ErrSectionTypeMismatch)
+	_, is := err.(*ErrConfigAlreadyLoaded)
 	return is
 }
 
