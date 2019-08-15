@@ -207,9 +207,10 @@ func (l *lexer) rest() string {
 func lexKeyword(l *lexer) stateFn {
 	for {
 		l.acceptRun(" \t\n")
-		l.acceptComment()
 		l.ignore()
 		switch curr := l.rest(); {
+		case strings.HasPrefix(curr, "#"):
+			return lexComment
 		case strings.HasPrefix(curr, string(kwPackage)):
 			return lexPackage
 		case strings.HasPrefix(curr, string(kwConfig)):
@@ -227,6 +228,12 @@ func lexKeyword(l *lexer) stateFn {
 	}
 	l.emit(itemEOF)
 	return nil
+}
+
+func lexComment(l *lexer) stateFn {
+	l.acceptComment()
+	l.ignore()
+	return lexKeyword
 }
 
 func lexPackage(l *lexer) stateFn {

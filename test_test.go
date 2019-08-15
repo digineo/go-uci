@@ -86,11 +86,18 @@ config wifi-iface wifi0
 
 const tcComment = `
 # heading
+
+# another heading
 config foo
 	option opt1 1
 	# option opt1 2
 	option opt2 3 # baa
 	option opt3 hello
+
+# a comment block spanning
+# multiple lines, surrounded
+# by empty lines
+
 # eof
 `
 
