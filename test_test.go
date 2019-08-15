@@ -94,6 +94,11 @@ config foo
 # eof
 `
 
+const tcInvalid = `
+<?xml version="1.0">
+<error message="not a UCI file" />
+`
+
 var lexerTests = []struct {
 	name, input string
 	expected    []item
@@ -149,6 +154,9 @@ var lexerTests = []struct {
 		itemOption.mk("option"), itemIdent.mk("opt1"), itemString.mk("1"),
 		itemOption.mk("option"), itemIdent.mk("opt2"), itemString.mk("3"),
 		itemOption.mk("option"), itemIdent.mk("opt3"), itemString.mk("hello"),
+	}},
+	{"invalid", tcInvalid, []item{
+		itemError.mk("expected keyword (package, config, option, list) or eof"),
 	}},
 }
 

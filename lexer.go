@@ -43,7 +43,7 @@ func lex(name, input string) *lexer {
 //
 // https://talks.golang.org/2011/lex.slide#41
 func (l *lexer) nextItem() item {
-	for {
+	for l.state != nil {
 		select {
 		case it, ok := <-l.items:
 			if ok {
@@ -53,23 +53,28 @@ func (l *lexer) nextItem() item {
 
 		default:
 			s := l.state(l)
-			if s == nil {
-				l.stop()
-				return l.eof()
-			}
 			l.state = s
+			if s == nil {
+				return l.stop()
+			}
 		}
 	}
+	return l.eof()
 }
 
 // stop closes the item channel, so that nextItem will (eventually)
 // return an EOF token.
-func (l *lexer) stop() {
+func (l *lexer) stop() item {
+	it := l.eof()
 	if l.items == nil {
-		return
+		return it
+	}
+	if len(l.items) > 0 {
+		it = <-l.items
 	}
 	close(l.items)
 	l.items = nil
+	return it
 }
 
 // eof directly returns an EOF token.
@@ -217,6 +222,8 @@ func lexKeyword(l *lexer) stateFn {
 		if l.next() == eof {
 			break
 		}
+		l.errorf("expected keyword (package, config, option, list) or eof")
+		break
 	}
 	l.emit(itemEOF)
 	return nil
