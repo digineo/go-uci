@@ -113,6 +113,16 @@ func TestConvenienceGet(t *testing.T) {
 	m.AssertExpectations(t)
 }
 
+func TestConvenienceGetBool(t *testing.T) {
+	assert := assert.New(t)
+	m := defaultTree.(*mockTree)
+	m.On("GetBool", "foo", "bar", "opt").Return(true, true)
+	value, ok := GetBool("foo", "bar", "opt")
+	assert.True(ok)
+	assert.True(value)
+	m.AssertExpectations(t)
+}
+
 func TestConvenienceSet(t *testing.T) {
 	assert := assert.New(t)
 	m := defaultTree.(*mockTree)
