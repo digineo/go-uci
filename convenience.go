@@ -1,8 +1,10 @@
 package uci
 
-// defaultTree is a convenient accessor to the UCI default location
-// at /etc/config.
-var defaultTree = NewTree("/etc/config")
+// DefaultTreePath points to the default UCI location.
+const DefaultTreePath = "/etc/config"
+
+// defaultTree is a convenient accessor to the UCI default location.
+var defaultTree = NewTree(DefaultTreePath)
 
 // LoadConfig delegates to the default tree. See Tree for details.
 func LoadConfig(name string, forceReload bool) error {
