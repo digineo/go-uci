@@ -228,6 +228,11 @@ func parse(name, input string) (cfg *config, err error) {
 
 	scan(name, input).each(func(tok token) bool {
 		switch tok.typ {
+		case tokError:
+			perr := ParseError(tok.items[0].val)
+			err = &perr
+			return false
+
 		case tokPackage:
 			err = errors.New("UCI imports/exports are not yet supported")
 			return false

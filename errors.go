@@ -42,3 +42,17 @@ func IsSectionTypeMismatch(err error) bool {
 	_, is := err.(*ErrSectionTypeMismatch)
 	return is
 }
+
+type ParseError string
+
+func (err ParseError) Error() string {
+	return fmt.Sprintf("parse error: %s", string(err))
+}
+
+func IsParseError(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, is := err.(*ParseError)
+	return is
+}
