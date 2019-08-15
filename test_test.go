@@ -233,4 +233,18 @@ var parserTests = []struct {
 		tokOption.mk(itemIdent.mk("unnamed"), itemString.mk("0")),
 		tokList.mk(itemIdent.mk("list"), itemString.mk("30")),
 	}},
+	{"hyphenated", tcHyphenatedInput, []token{
+		tokSection.mk(itemIdent.mk("wifi-device"), itemString.mk("wl0")),
+		tokOption.mk(itemIdent.mk("type"), itemString.mk("broadcom")),
+		tokOption.mk(itemIdent.mk("channel"), itemString.mk("6")),
+		tokSection.mk(itemIdent.mk("wifi-iface"), itemString.mk("wifi0")),
+		tokOption.mk(itemIdent.mk("device"), itemString.mk("wl0")),
+		tokOption.mk(itemIdent.mk("mode"), itemString.mk("ap")),
+	}},
+	{"commented", tcComment, []token{
+		tokSection.mk(itemIdent.mk("foo")),
+		tokOption.mk(itemIdent.mk("opt1"), itemString.mk("1")),
+		tokOption.mk(itemIdent.mk("opt2"), itemString.mk("3")),
+		tokOption.mk(itemIdent.mk("opt3"), itemString.mk("hello")),
+	}},
 }
