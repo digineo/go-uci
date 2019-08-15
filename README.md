@@ -52,7 +52,7 @@ import "github.com/digineo/go-uci"
 
 func main() {
     // use the default tree (/etc/config)
-    if values, ok := u.Get("system", "@system[0]", "hostname"); ok {
+    if values, ok := uci.Get("system", "@system[0]", "hostname"); ok {
         fmt.Println("hostanme", values)
         //=> hostname [OpenWRT]
     }
