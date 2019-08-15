@@ -205,28 +205,25 @@ func (l *lexer) rest() string {
 }
 
 func lexKeyword(l *lexer) stateFn {
-	for {
-		l.acceptRun(" \t\n")
-		l.ignore()
-		switch curr := l.rest(); {
-		case strings.HasPrefix(curr, "#"):
-			return lexComment
-		case strings.HasPrefix(curr, string(kwPackage)):
-			return lexPackage
-		case strings.HasPrefix(curr, string(kwConfig)):
-			return lexConfig
-		case strings.HasPrefix(curr, string(kwOption)):
-			return lexOption
-		case strings.HasPrefix(curr, string(kwList)):
-			return lexList
-		}
-		if l.next() == eof {
-			break
-		}
-		l.errorf("expected keyword (package, config, option, list) or eof")
-		break
+	l.acceptRun(" \t\n")
+	l.ignore()
+	switch curr := l.rest(); {
+	case strings.HasPrefix(curr, "#"):
+		return lexComment
+	case strings.HasPrefix(curr, string(kwPackage)):
+		return lexPackage
+	case strings.HasPrefix(curr, string(kwConfig)):
+		return lexConfig
+	case strings.HasPrefix(curr, string(kwOption)):
+		return lexOption
+	case strings.HasPrefix(curr, string(kwList)):
+		return lexList
 	}
-	l.emit(itemEOF)
+	if l.next() == eof {
+		l.emit(itemEOF)
+	} else {
+		l.errorf("expected keyword (package, config, option, list) or eof")
+	}
 	return nil
 }
 
