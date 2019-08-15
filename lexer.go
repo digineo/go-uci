@@ -149,6 +149,19 @@ func (l *lexer) acceptRun(valid string) {
 	l.backup()
 }
 
+// acceptComment consumes a line comment starting with # until eol or eof.
+func (l *lexer) acceptComment() {
+	if l.next() == '#' {
+		for {
+			r := l.next()
+			if r == '\n' || r == eof {
+				break
+			}
+		}
+	}
+	l.backup()
+}
+
 // acceptIdent consumes an UCI identifier [-_a-zA-Z0-9].
 func (l *lexer) acceptIdent() {
 	for {
@@ -189,6 +202,7 @@ func (l *lexer) rest() string {
 func lexKeyword(l *lexer) stateFn {
 	for {
 		l.acceptRun(" \t\n")
+		l.acceptComment()
 		l.ignore()
 		switch curr := l.rest(); {
 		case strings.HasPrefix(curr, string(kwPackage)):
@@ -321,7 +335,7 @@ Loop:
 			fallthrough
 		case eof:
 			return l.errorf("unterminated unquoted string")
-		case '\n':
+		case ' ', '\n':
 			break Loop
 		}
 	}

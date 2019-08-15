@@ -84,6 +84,16 @@ config wifi-iface wifi0
 	option mode 'ap'
 `
 
+const tcComment = `
+# heading
+config foo
+	option opt1 1
+	# option opt1 2
+	option opt2 3 # baa
+	option opt3 hello
+# eof
+`
+
 var lexerTests = []struct {
 	name, input string
 	expected    []item
@@ -133,6 +143,12 @@ var lexerTests = []struct {
 		itemConfig.mk("config"), itemIdent.mk("wifi-iface"), itemString.mk("wifi0"),
 		itemOption.mk("option"), itemIdent.mk("device"), itemString.mk("wl0"),
 		itemOption.mk("option"), itemIdent.mk("mode"), itemString.mk("ap"),
+	}},
+	{"commented", tcComment, []item{
+		itemConfig.mk("config"), itemIdent.mk("foo"), // unnamed
+		itemOption.mk("option"), itemIdent.mk("opt1"), itemString.mk("1"),
+		itemOption.mk("option"), itemIdent.mk("opt2"), itemString.mk("3"),
+		itemOption.mk("option"), itemIdent.mk("opt3"), itemString.mk("hello"),
 	}},
 }
 
