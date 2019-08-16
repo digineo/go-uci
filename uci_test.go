@@ -125,7 +125,7 @@ func TestGetSections(t *testing.T) {
 
 	names, exists := r.GetSections("system", "system")
 	assert.True(exists)
-	assert.ElementsMatch(names, []string{"@system[1]"})
+	assert.ElementsMatch(names, []string{"@system[0]"})
 
 	names, exists = r.GetSections("system", "timeserver")
 	assert.True(exists)
@@ -134,6 +134,18 @@ func TestGetSections(t *testing.T) {
 	names, exists = r.GetSections("nonexistent", "foo")
 	assert.False(exists)
 	assert.Nil(names)
+
+	names, exists = r.GetSections("anonymous", "anon1")
+	assert.True(exists)
+	assert.ElementsMatch(names, []string{"@anon1[0]"})
+
+	names, exists = r.GetSections("anonymous", "anon2")
+	assert.True(exists)
+	assert.ElementsMatch(names, []string{"@anon2[0]", "@anon2[1]"})
+
+	names, exists = r.GetSections("anonymous", "anon3")
+	assert.True(exists)
+	assert.ElementsMatch(names, []string{"@anon3[0]", "@anon3[1]", "@anon3[2]"})
 }
 
 func TestAddSection(t *testing.T) {

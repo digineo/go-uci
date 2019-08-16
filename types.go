@@ -181,7 +181,19 @@ func (c *config) sectionName(s *section) string {
 	if s.Name != "" {
 		return s.Name
 	}
-	return fmt.Sprintf("@%s[%d]", s.Type, c.count(s.Type))
+	return fmt.Sprintf("@%s[%d]", s.Type, c.index(s))
+}
+
+func (c *config) index(s *section) (i int) {
+	for _, sec := range c.Sections {
+		if sec == s {
+			return i
+		}
+		if sec.Type == s.Type {
+			i++
+		}
+	}
+	panic("not reached")
 }
 
 func (c *config) count(typ string) (n int) {
