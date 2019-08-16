@@ -1,6 +1,7 @@
 package uci
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -313,7 +314,7 @@ func (t *tree) saveConfig(c *config) error {
 	// We rely a bit on the fact that UCI ignores dotfiles in /etc/config,
 	// so this should not interfere with normal operations when we leave
 	// incomplete files behind (for whatever reason).
-	f, err := ioutil.TempFile(t.dir, ".*."+c.Name)
+	f, err := newTmpFile(t.dir, ".*."+c.Name)
 	if err != nil {
 		return err
 	}
@@ -321,26 +322,53 @@ func (t *tree) saveConfig(c *config) error {
 	_, err = c.WriteTo(f)
 	if err != nil {
 		f.Close()
-		os.Remove(f.Name())
+		f.Remove()
 		return err
 	}
 
 	if err = f.Chmod(0644); err != nil {
 		f.Close()
-		os.Remove(f.Name())
+		f.Remove()
 		return err
 	}
 	if err = f.Sync(); err != nil {
 		f.Close()
-		os.Remove(f.Name())
+		f.Remove()
 		return err
 	}
 	f.Close()
 
-	if err = os.Rename(f.Name(), filepath.Join(t.dir, c.Name)); err != nil {
+	if err = f.Rename(filepath.Join(t.dir, c.Name)); err != nil {
 		return err
 	}
 
 	c.tainted = false
 	return nil
 }
+
+// tmpFile is used by *tree.saveConfig to create/update a config file.
+type tmpFile interface {
+	io.Writer
+	Chmod(os.FileMode) error
+	Close() error
+	Remove() error
+	Rename(string) error
+	Sync() error
+}
+
+// newTmpFile purely exists to be replaced in tests.
+var newTmpFile = func(dir, pattern string) (tmpFile, error) {
+	f, err := ioutil.TempFile(dir, pattern)
+	if err != nil {
+		return nil, err
+	}
+	return &tmpFileImpl{f}, nil
+}
+
+type tmpFileImpl struct{ *os.File }
+
+func (tmp *tmpFileImpl) Chmod(mode os.FileMode) error { return tmp.File.Chmod(mode) }
+func (tmp *tmpFileImpl) Close() error                 { return tmp.File.Close() }
+func (tmp *tmpFileImpl) Remove() error                { return os.Remove(tmp.File.Name()) }
+func (tmp *tmpFileImpl) Rename(newpath string) error  { return os.Rename(tmp.File.Name(), newpath) }
+func (tmp *tmpFileImpl) Sync() error                  { return tmp.File.Sync() }

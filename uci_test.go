@@ -3,12 +3,14 @@ package uci
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func loadExpected(t *testing.T, name string) *config {
@@ -319,4 +321,90 @@ func TestRevert(t *testing.T) {
 	assert.True(tree.configs["system"].tainted)
 	r.Revert("system")
 	assert.Len(tree.configs, 0)
+}
+
+func TestCommit(t *testing.T) {
+	origNewTmpFile := newTmpFile
+	m := &mockTempFile{}
+	newTmpFile = func(_, _ string) (tmpFile, error) { return m, nil }
+	defer func() { newTmpFile = origNewTmpFile }()
+
+	assert := assert.New(t)
+	r := NewTree("testdata")
+
+	// untainted save
+	assert.NoError(r.Commit())
+
+	// taint the tree
+	assert.NoError(r.AddSection("cfgname", "secname", "sectype"))
+	assert.True(r.Set("cfgname", "secname", "optname", "optvalue"))
+	const content = "\nconfig sectype 'secname'\n\toption optname 'optvalue'\n\n"
+
+	// try saving, but let it fail at different points
+	reset := func(onwrite, onchmod, onsync, onrename error) {
+		m.Buffer.Reset()
+		m.ExpectedCalls = nil
+		m.On("Close").Return(nil)
+		m.On("Remove").Return(nil)
+		m.On("Write", mock.AnythingOfType("[]uint8")).Return(onwrite)
+		m.On("Chmod", os.FileMode(0644)).Return(onchmod)
+		m.On("Sync").Return(onsync)
+		m.On("Rename", "testdata/cfgname").Return(onrename)
+	}
+
+	reset(errors.New("fail write"), nil, nil, nil)
+	assert.EqualError(r.Commit(), "fail write")
+	assert.Equal(0, m.Buffer.Len())
+
+	reset(nil, errors.New("fail chmod"), nil, nil)
+	assert.EqualError(r.Commit(), "fail chmod")
+	assert.EqualValues(content, m.Buffer.String())
+
+	reset(nil, nil, errors.New("fail sync"), nil)
+	assert.EqualError(r.Commit(), "fail sync")
+
+	reset(nil, nil, nil, errors.New("fail rename"))
+	assert.EqualError(r.Commit(), "fail rename")
+
+	reset(nil, nil, nil, nil)
+	assert.NoError(r.Commit())
+}
+
+type mockTempFile struct {
+	mock.Mock
+	bytes.Buffer
+}
+
+func (m *mockTempFile) Write(p []byte) (int, error) {
+	args := m.Called(p)
+	if err := args.Error(0); err != nil {
+		return 0, err
+	}
+	n, _ := m.Buffer.Write(p)
+	return n, nil
+}
+
+func (m *mockTempFile) Chmod(mode os.FileMode) error {
+	args := m.Called(mode)
+	return args.Error(0)
+}
+
+func (m *mockTempFile) Close() error {
+	args := m.Called()
+	return args.Error(0)
+}
+
+func (m *mockTempFile) Remove() error {
+	args := m.Called()
+	return args.Error(0)
+}
+
+func (m *mockTempFile) Rename(newpath string) error {
+	args := m.Called(newpath)
+	return args.Error(0)
+}
+
+func (m *mockTempFile) Sync() error {
+	args := m.Called()
+	return args.Error(0)
 }
