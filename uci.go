@@ -76,7 +76,10 @@ var _ Tree = (*tree)(nil)
 
 // NewTree constructs new RootDir pointing to root.
 func NewTree(root string) Tree {
-	return &tree{dir: root}
+	return &tree{
+		dir:     root,
+		configs: make(map[string]*config),
+	}
 }
 
 func (t *tree) LoadConfig(name string, forceReload bool) error {

@@ -134,6 +134,49 @@ func TestGetSections(t *testing.T) {
 	assert.Nil(names)
 }
 
+func TestAddSection(t *testing.T) {
+	assert := assert.New(t)
+	r := NewTree("testdata")
+
+	assert.NoError(r.AddSection("nonexistent", "a", "section"))
+
+	assert.NoError(r.AddSection("system", "foo", "foo"))
+	assert.True(r.Set("system", "foo", "bar", "42"))
+	values, exists := r.Get("system", "foo", "bar")
+	assert.True(exists)
+	assert.ElementsMatch(values, []string{"42"})
+
+	assert.Error(r.AddSection("system", "foo", "notfoo"))
+	assert.NoError(r.AddSection("system", "foo", "foo"))
+
+	assert.NoError(r.AddSection("nonexistent", "a", "section"))
+	assert.True(r.Set("nonexistent", "a", "section", "value"))
+	values, exists = r.Get("nonexistent", "a", "section")
+	assert.True(exists)
+	assert.ElementsMatch(values, []string{"value"})
+}
+
+func TestDelSection(t *testing.T) {
+	assert := assert.New(t)
+	r := NewTree("testdata")
+
+	names, exists := r.GetSections("system", "timeserver")
+	assert.True(exists)
+	assert.ElementsMatch(names, []string{"ntp"})
+	r.DelSection("system", "ntp")
+
+	names, exists = r.GetSections("system", "timeserver")
+	assert.True(exists)
+	assert.Len(names, 0)
+
+	_, exists = r.GetSections("nonexistent", "foo")
+	assert.False(exists)
+	r.DelSection("nonexistent", "@foo[0]")
+
+	_, exists = r.GetSections("nonexistent", "foo")
+	assert.False(exists)
+}
+
 func TestGet(t *testing.T) {
 	assert := assert.New(t)
 
@@ -185,6 +228,32 @@ func TestDel(t *testing.T) {
 	assert.False(exists)
 }
 
+func TestSet(t *testing.T) {
+	assert := assert.New(t)
+	r := NewTree("testdata")
+
+	assert.True(r.Set("system", "ntp", "enabled", "0"))
+	values, exists := r.Get("system", "ntp", "enabled")
+	assert.True(exists)
+	assert.ElementsMatch(values, []string{"0"})
+
+	values, exists = r.Get("system", "@system[0]", "hostname")
+	assert.True(exists)
+	assert.ElementsMatch(values, []string{"testhost"})
+
+	assert.True(r.Set("system", "@system[0]", "hosttest"))
+
+	assert.False(r.Set("system", "nonexistent", "foo", "bar"))
+	values, exists = r.Get("system", "nonexistent", "foo")
+	assert.False(exists)
+	assert.Nil(values)
+
+	assert.False(r.Set("nonexistent", "foo", "bar", "42"))
+	values, exists = r.Get("nonexistent", "foo", "bar")
+	assert.False(exists)
+	assert.Nil(values)
+}
+
 func TestListDelete(t *testing.T) {
 	assert := assert.New(t)
 
@@ -228,4 +297,26 @@ func TestGetBool_Other(t *testing.T) {
 
 	_, ok := r.GetBool("wireless", "guest_radio0", "mode")
 	assert.False(ok)
+}
+
+func TestRevert(t *testing.T) {
+	assert := assert.New(t)
+	r := NewTree("testdata")
+	tree := r.(*tree)
+
+	assert.NoError(r.LoadConfig("system", false))
+	assert.Len(tree.configs, 1)
+
+	// revert all
+	r.Revert()
+	assert.Len(tree.configs, 0)
+
+	assert.NoError(r.LoadConfig("system", false))
+	assert.Len(tree.configs, 1)
+
+	// taint tree
+	assert.True(r.Set("system", "ntp", "foo", "42"))
+	assert.True(tree.configs["system"].tainted)
+	r.Revert("system")
+	assert.Len(tree.configs, 0)
 }
