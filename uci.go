@@ -322,18 +322,18 @@ func (t *tree) saveConfig(c *config) error {
 	_, err = c.WriteTo(f)
 	if err != nil {
 		f.Close()
-		f.Remove()
+		_ = f.Remove()
 		return err
 	}
 
 	if err = f.Chmod(0644); err != nil {
 		f.Close()
-		f.Remove()
+		_ = f.Remove()
 		return err
 	}
 	if err = f.Sync(); err != nil {
 		f.Close()
-		f.Remove()
+		_ = f.Remove()
 		return err
 	}
 	f.Close()
