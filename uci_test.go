@@ -282,6 +282,26 @@ func TestListDelete(t *testing.T) {
 	assert.Empty(val)
 }
 
+func TestGetLast_Success(t *testing.T) {
+	assert := assert.New(t)
+
+	r := NewTree("testdata")
+
+	val, ok := r.GetLast("system", "ntp", "server")
+	assert.True(ok)
+
+	assert.Equal(val, "3.lede.pool.ntp.org")
+}
+
+func TestGetLast_Failure(t *testing.T) {
+	assert := assert.New(t)
+
+	r := NewTree("testdata")
+
+	_, ok := r.GetLast("system", "ntp", "port")
+	assert.False(ok)
+}
+
 func TestGetBool_False(t *testing.T) {
 	assert := assert.New(t)
 

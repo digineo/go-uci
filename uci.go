@@ -44,7 +44,12 @@ type Tree interface {
 	// within exists.
 	Get(config, section, option string) ([]string, bool)
 
-	// GetBool works the same way as Get does but interprets the last
+	// GetLast retrieves the last value that was defined for a fully
+	// qualified option, and a boolean indicating whether the config file,
+	// config section and the option exists.
+	GetLast(config, section, option string) (string, bool)
+
+	// GetBool works the same way as GetLast does but interprets the last
 	// specified value as a boolean.  If the found value can't be
 	// interpreted as either true or false, it will return nil and false.
 	GetBool(config, section, option string) (bool, bool)
@@ -173,13 +178,21 @@ func (t *tree) Get(config, section, option string) ([]string, bool) {
 	return t.lookupValues(config, section, option)
 }
 
-func (t *tree) GetBool(config, section, option string) (bool, bool) {
+func (t *tree) GetLast(config, section, option string) (string, bool) {
 	vals, ok := t.Get(config, section, option)
 	if !ok || len(vals) == 0 {
-		return false, false
+		return "", false
 	}
 
-	switch vals[len(vals)-1] {
+	return vals[len(vals)-1], true
+}
+
+func (t *tree) GetBool(config, section, option string) (bool, bool) {
+	val, ok := t.GetLast(config, section, option)
+	if !ok {
+		return false, false
+	}
+	switch val {
 	case "1", "on", "true", "yes", "enabled":
 		return true, true
 	case "0", "off", "false", "no", "disabled":
