@@ -40,6 +40,11 @@ func (m *mockTree) Get(config, section, option string) ([]string, bool) {
 	return []string{args.String(0)}, args.Bool(1)
 }
 
+func (m *mockTree) GetLast(config, section, option string) (string, bool) {
+	args := m.Called(config, section, option)
+	return args.String(0), args.Bool(1)
+}
+
 func (m *mockTree) GetBool(config, section, option string) (bool, bool) {
 	args := m.Called(config, section, option)
 	return args.Bool(0), args.Bool(1)
@@ -110,6 +115,16 @@ func TestConvenienceGet(t *testing.T) {
 	list, ok := Get("foo", "bar", "opt")
 	assert.True(ok)
 	assert.EqualValues([]string{"ok"}, list)
+	m.AssertExpectations(t)
+}
+
+func TestConvenienceGetLast(t *testing.T) {
+	assert := assert.New(t)
+	m := defaultTree.(*mockTree)
+	m.On("GetLast", "foo", "bar", "opt").Return("ok", true)
+	list, ok := GetLast("foo", "bar", "opt")
+	assert.True(ok)
+	assert.EqualValues("ok", list)
 	m.AssertExpectations(t)
 }
 

@@ -31,6 +31,11 @@ func Get(config, section, option string) ([]string, bool) {
 	return defaultTree.Get(config, section, option)
 }
 
+// GetLast delegates to the default tree. See Tree for details.
+func GetLast(config, section, option string) (string, bool) {
+	return defaultTree.GetLast(config, section, option)
+}
+
 // GetBool delegates to the default tree. See Tree for details.
 func GetBool(config, section, option string) (bool, bool) {
 	return defaultTree.GetBool(config, section, option)
