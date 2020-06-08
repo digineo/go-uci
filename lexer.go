@@ -94,7 +94,7 @@ func (l *lexer) emit(t itemType) {
 
 // emitString emits a string token. it removes the surrounding quotes
 func (l *lexer) emitString(t itemType) {
-	if l.pos-1 > l.start+1 {
+	if l.pos-1 >= l.start+1 {
 		l.items <- item{t, l.input[l.start+1 : l.pos-1], l.pos}
 		l.start = l.pos
 	}

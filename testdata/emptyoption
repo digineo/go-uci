@@ -1,0 +1,3 @@
+config empty
+  option empty1
+  option empty2 ''

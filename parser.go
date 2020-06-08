@@ -153,7 +153,7 @@ func scanSection(s *scanner) scanFn {
 }
 
 // scanOption looks for either an "option" or "list" keyword (with name
-// and value), or it falls back to scanStart
+// and optional value), or it falls back to scanStart
 func scanOption(s *scanner) scanFn {
 	it := s.next()
 	switch it.typ {

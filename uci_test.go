@@ -44,7 +44,14 @@ func loadExpected(t *testing.T, name string) *config {
 }
 
 func TestLoadConfig(t *testing.T) {
-	tt := []string{"system", "emptyfile", "emptysection", "luci", "ucitrack"}
+	tt := []string{
+		"system",
+		"emptyfile",
+		"emptysection",
+		"emptyoption",
+		"luci",
+		"ucitrack",
+	}
 	for i := range tt {
 		name := tt[i]
 		t.Run(name, func(t *testing.T) {

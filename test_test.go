@@ -119,6 +119,12 @@ config foo
 	option opt opt\
 `
 
+const tcEmptyOption = `
+config foo
+	option empty1
+	option empty2 ''
+`
+
 var lexerTests = []struct {
 	name, input string
 	expected    []item
@@ -188,6 +194,11 @@ var lexerTests = []struct {
 	{"unterminated unquoted string", tcUnterminatedUnquoted, []item{
 		itemConfig.mk("config"), itemIdent.mk("foo"), // unnamed
 		itemOption.mk("option"), itemIdent.mk("opt"), itemError.mk("unterminated unquoted string"),
+	}},
+	{"empty option", tcEmptyOption, []item{
+		itemConfig.mk("config"), itemIdent.mk("foo"), // unnamed
+		itemOption.mk("option"), itemIdent.mk("empty1"), // no value
+		itemOption.mk("option"), itemIdent.mk("empty2"), itemString.mk(""), // empty value
 	}},
 }
 
@@ -260,5 +271,8 @@ var parserTests = []struct {
 	{"unterminated unquoted string", tcUnterminatedUnquoted, []token{
 		tokSection.mk(itemIdent.mk("foo")),
 		tokError.mk(itemError.mk("unterminated unquoted string")),
+	}},
+	{"empty option", tcEmptyOption, []token{
+		tokSection.mk(itemIdent.mk("foo")),
 	}},
 }

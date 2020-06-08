@@ -10,7 +10,7 @@ import (
 
 // NOTE: config, section and option types basically are AST nodes for the
 // parser. The JSON struct tags are mainly for development and testing
-// purposes: We'er generating JSON dumps of the tree when running tests
+// purposes: We're generating JSON dumps of the tree when running tests
 // with DUMP="json". After a manual comparison with the corresponding UCI
 // file in testdata/, we can use the dumps to read them back as test case
 // expectations.

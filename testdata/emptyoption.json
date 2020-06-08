@@ -1,0 +1,7 @@
+{
+  "name": "emptysection",
+  "sections": [{
+    "name": "empty",
+    "type": "empty"
+  }]
+}
