@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/spf13/afero"
 	"os"
 	"path/filepath"
 	"testing"
@@ -358,7 +359,7 @@ func TestRevert(t *testing.T) {
 func TestCommit(t *testing.T) {
 	origNewTmpFile := newTmpFile
 	m := &mockTempFile{}
-	newTmpFile = func(_, _ string) (tmpFile, error) { return m, nil }
+	newTmpFile = func(_ afero.Fs, _ string) (tmpFile, error) { return m, nil }
 	defer func() { newTmpFile = origNewTmpFile }()
 
 	assert := assert.New(t)
