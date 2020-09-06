@@ -1,10 +1,9 @@
 package uci
 
 import (
+	"github.com/spf13/afero"
 	"io"
-	"io/ioutil"
 	"os"
-	"path/filepath"
 	"sync"
 )
 
@@ -72,8 +71,8 @@ type Tree interface {
 }
 
 type tree struct {
-	dir     string
 	configs map[string]*config
+	fs      afero.Fs
 
 	sync.Mutex
 }
@@ -82,9 +81,14 @@ var _ Tree = (*tree)(nil)
 
 // NewTree constructs new RootDir pointing to root.
 func NewTree(root string) Tree {
+	return NewTreeFromFs(afero.NewBasePathFs(afero.NewOsFs(), root))
+}
+
+// NewTree constructs new RootDir pointing to the based of the given afero.Fs
+func NewTreeFromFs(fs afero.Fs) Tree {
 	return &tree{
-		dir:     root,
 		configs: make(map[string]*config),
+		fs:      fs,
 	}
 }
 
@@ -105,7 +109,7 @@ func (t *tree) LoadConfig(name string, forceReload bool) error {
 // loadConfig actually reads a config file. Its call must be guarded by
 // locking the tree's mutex.
 func (t *tree) loadConfig(name string) error {
-	body, err := ioutil.ReadFile(filepath.Join(t.dir, name))
+	body, err := afero.ReadFile(t.fs, name)
 	if err != nil {
 		return err
 	}
@@ -327,7 +331,7 @@ func (t *tree) saveConfig(c *config) error {
 	// We rely a bit on the fact that UCI ignores dotfiles in /etc/config,
 	// so this should not interfere with normal operations when we leave
 	// incomplete files behind (for whatever reason).
-	f, err := newTmpFile(t.dir, ".*."+c.Name)
+	f, err := newTmpFile(t.fs, ".*."+c.Name)
 	if err != nil {
 		return err
 	}
@@ -351,7 +355,7 @@ func (t *tree) saveConfig(c *config) error {
 	}
 	f.Close()
 
-	if err = f.Rename(filepath.Join(t.dir, c.Name)); err != nil {
+	if err = f.Rename(c.Name); err != nil {
 		return err
 	}
 
@@ -370,18 +374,21 @@ type tmpFile interface {
 }
 
 // newTmpFile purely exists to be replaced in tests.
-var newTmpFile = func(dir, pattern string) (tmpFile, error) {
-	f, err := ioutil.TempFile(dir, pattern)
+var newTmpFile = func(fs afero.Fs, pattern string) (tmpFile, error) {
+	f, err := afero.TempFile(fs, "/", pattern)
 	if err != nil {
 		return nil, err
 	}
-	return &tmpFileImpl{f}, nil
+	return &tmpFileImpl{f, fs}, nil
 }
 
-type tmpFileImpl struct{ *os.File }
+type tmpFileImpl struct {
+	afero.File
+	fs afero.Fs
+}
 
-func (tmp *tmpFileImpl) Chmod(mode os.FileMode) error { return tmp.File.Chmod(mode) }
+func (tmp *tmpFileImpl) Chmod(mode os.FileMode) error { return tmp.fs.Chmod(tmp.Name(), mode) }
 func (tmp *tmpFileImpl) Close() error                 { return tmp.File.Close() }
-func (tmp *tmpFileImpl) Remove() error                { return os.Remove(tmp.File.Name()) }
-func (tmp *tmpFileImpl) Rename(newpath string) error  { return os.Rename(tmp.File.Name(), newpath) }
+func (tmp *tmpFileImpl) Remove() error                { return tmp.fs.Remove(tmp.File.Name()) }
+func (tmp *tmpFileImpl) Rename(newpath string) error  { return tmp.fs.Rename(tmp.File.Name(), newpath) }
 func (tmp *tmpFileImpl) Sync() error                  { return tmp.File.Sync() }
