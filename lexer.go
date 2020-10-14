@@ -346,7 +346,7 @@ Loop:
 			fallthrough
 		case eof:
 			return l.errorf("unterminated unquoted string")
-		case ' ', '\n':
+		case ' ', '#', '\n':
 			break Loop
 		}
 	}
