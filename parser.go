@@ -252,7 +252,7 @@ func parse(name, input string) (cfg *config, err error) {
 			if opt := sec.Get(name); opt != nil {
 				opt.SetValues(val)
 			} else {
-				sec.Add(newOption(name, val))
+				sec.Add(newOption(name, TypeOption, val))
 			}
 
 		case tokList:
@@ -262,7 +262,7 @@ func parse(name, input string) (cfg *config, err error) {
 			if opt := sec.Get(name); opt != nil {
 				opt.MergeValues(val)
 			} else {
-				sec.Add(newOption(name, val))
+				sec.Add(newOption(name, TypeList, val))
 			}
 		}
 		return true

@@ -57,43 +57,43 @@ func TestConfigGet(t *testing.T) {
 		// for fun, tcUnnamedInput starts with a named section. for extra
 		// fun, tcUnnamedInput extends the named section at the end.
 		{"named", "foo", []*option{
-			newOption("pos", "3"), // gets overwritten by last section
-			newOption("unnamed", "0"),
-			newOption("list", "0", "30"), // gets merged with last section
+			newOption("pos", TypeOption, "3"), // gets overwritten by last section
+			newOption("unnamed", TypeOption, "0"),
+			newOption("list", TypeList, "0", "30"), // gets merged with last section
 		}},
 
 		// the @foo[0] selector only compares type (foo) and index (0)
 		{"@foo[0]", "foo", []*option{ // alias for "named"
-			newOption("pos", "3"),
-			newOption("unnamed", "0"),
-			newOption("list", "0", "30"),
+			newOption("pos", TypeOption, "3"),
+			newOption("unnamed", TypeOption, "0"),
+			newOption("list", TypeList, "0", "30"),
 		}},
 		{"@foo[1]", "foo", []*option{
-			newOption("pos", "1"),
-			newOption("unnamed", "1"),
-			newOption("list", "10"),
+			newOption("pos", TypeOption, "1"),
+			newOption("unnamed", TypeOption, "1"),
+			newOption("list", TypeOption, "10"),
 		}},
 		{"@foo[2]", "foo", []*option{
-			newOption("pos", "2"),
-			newOption("unnamed", "1"),
-			newOption("list", "20"),
+			newOption("pos", TypeOption, "2"),
+			newOption("unnamed", TypeOption, "1"),
+			newOption("list", TypeList, "20"),
 		}},
 
 		// negative indices count from the end
 		{"@foo[-3]", "foo", []*option{ // alias for "@foo[0]" == "named"
-			newOption("pos", "3"),
-			newOption("unnamed", "0"),
-			newOption("list", "0", "30"),
+			newOption("pos", TypeOption, "3"),
+			newOption("unnamed", TypeOption, "0"),
+			newOption("list", TypeList, "0", "30"),
 		}},
 		{"@foo[-2]", "foo", []*option{ // alias for "@foo[1]"
-			newOption("pos", "1"),
-			newOption("unnamed", "1"),
-			newOption("list", "10"),
+			newOption("pos", TypeOption, "1"),
+			newOption("unnamed", TypeOption, "1"),
+			newOption("list", TypeList, "10"),
 		}},
 		{"@foo[-1]", "foo", []*option{ // alias for "@foo[2]"
-			newOption("pos", "2"),
-			newOption("unnamed", "1"),
-			newOption("list", "20"),
+			newOption("pos", TypeOption, "2"),
+			newOption("unnamed", TypeOption, "1"),
+			newOption("list", TypeList, "20"),
 		}},
 	}
 

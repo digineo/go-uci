@@ -1,6 +1,9 @@
 package uci
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+)
 
 // item represents a lexeme (token)
 //
@@ -9,6 +12,38 @@ type item struct {
 	typ itemType
 	val string
 	pos int
+}
+
+type OptionType int
+
+const (
+	TypeOption OptionType = iota // option is not a list
+	TypeList                     // option is a list
+)
+
+// MarshalJSON implements encoding/json.Marshaler.
+func (ot OptionType) MarshalJSON() ([]byte, error) {
+	switch ot {
+	case TypeOption:
+		return []byte(`"option"`), nil
+	case TypeList:
+		return []byte(`"list"`), nil
+	default:
+		return nil, ErrUnknownOptionType{Type: fmt.Sprintf("!OptionType(%02x)", ot)}
+	}
+}
+
+// UnmarshalJSON implements encoding/json.Unmarshaler.
+func (ot *OptionType) UnmarshalJSON(b []byte) error {
+	if len(b) == 0 || bytes.Equal(b, []byte("null")) || bytes.Equal(b, []byte("\"option\"")) {
+		*ot = TypeOption
+		return nil
+	}
+	if bytes.Equal(b, []byte(`"list"`)) {
+		*ot = TypeList
+		return nil
+	}
+	return ErrUnknownOptionType{Type: string(b)}
 }
 
 // itemType defines the kind of lexed item

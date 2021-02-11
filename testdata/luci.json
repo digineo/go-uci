@@ -4,21 +4,21 @@
     "name": "main",
     "type": "core",
     "options": [
-      { "name": "lang",        "values": ["auto"] },
-      { "name": "mediaurlbase","values": ["/luci-static/bootstrap"] },
-      { "name": "resourcebase","values": ["/luci-static/resources"] }
+      { "name": "lang", "type":"option",        "values": ["auto"] },
+      { "name": "mediaurlbase","type":"option", "values": ["/luci-static/bootstrap"] },
+      { "name": "resourcebase","type":"option", "values": ["/luci-static/resources"] }
     ]
   },{
     "name": "flash_keep",
     "type": "extern",
     "options": [
-      { "name": "uci",     "values": ["/etc/config/"] },
-      { "name": "dropbear","values": ["/etc/dropbear/"] },
-      { "name": "openvpn", "values": ["/etc/openvpn/"] },
-      { "name": "passwd",  "values": ["/etc/passwd"] },
-      { "name": "opkg",    "values": ["/etc/opkg.conf"] },
-      { "name": "firewall","values": ["/etc/firewall.user"] },
-      { "name": "uploads", "values": ["/lib/uci/upload/"] }
+      { "name": "uci","type":"option",     "values": ["/etc/config/"] },
+      { "name": "dropbear", "type":"option","values": ["/etc/dropbear/"] },
+      { "name": "openvpn", "type":"option", "values": ["/etc/openvpn/"] },
+      { "name": "passwd", "type":"option",  "values": ["/etc/passwd"] },
+      { "name": "opkg", "type":"option",    "values": ["/etc/opkg.conf"] },
+      { "name": "firewall", "type":"option","values": ["/etc/firewall.user"] },
+      { "name": "uploads", "type":"option", "values": ["/lib/uci/upload/"] }
     ]
   },{
     "name": "languages",
@@ -27,14 +27,14 @@
     "name": "sauth",
     "type": "internal",
     "options": [
-      { "name": "sessionpath","values": ["/tmp/luci-sessions"] },
-      { "name": "sessiontime","values": ["3600"] }
+      { "name": "sessionpath", "type":"option","values": ["/tmp/luci-sessions"] },
+      { "name": "sessiontime", "type":"option","values": ["3600"] }
     ]
   },{
     "name": "ccache",
     "type": "internal",
     "options": [
-      { "name": "enable","values": ["1"] }
+      { "name": "enable", "type":"option","values": ["1"] }
     ]
   },{
     "name": "themes",

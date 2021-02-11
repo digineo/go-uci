@@ -57,7 +57,19 @@ type Tree interface {
 	// Set replaces the fully qualified option with the given values. It
 	// returns whether the config file and section exists. For new files
 	// and sections, you first need to initialize them with AddSection().
+	//
+	// Set will determine the option type by the number of values given.
+	// In particular, it will always choose TypeOption when len(values)
+	// is 1.
+	//
+	// Deprecated: Use SetType() to control the type.
 	Set(config, section, option string, values ...string) bool
+
+	// SetType replaces the fully qualified option with the given values.
+	// It returns whether the config file and section exists. For new
+	// files and sections, you first need to initialize them with
+	// AddSection().
+	SetType(config, section, option string, typ OptionType, values ...string) bool
 
 	// Del removes a fully qualified option.
 	Del(config, section, option string)
@@ -236,7 +248,7 @@ func (t *tree) lookupValues(config, section, option string) ([]string, bool) {
 	return opt.Values, true
 }
 
-func (t *tree) Set(config, section, option string, values ...string) bool {
+func (t *tree) SetType(config, section, option string, typ OptionType, values ...string) bool {
 	t.Lock()
 	defer t.Unlock()
 
@@ -252,10 +264,17 @@ func (t *tree) Set(config, section, option string, values ...string) bool {
 	if opt := sec.Get(option); opt != nil {
 		opt.SetValues(values...)
 	} else {
-		sec.Add(newOption(option, values...))
+		sec.Add(newOption(option, typ, values...))
 	}
 	cfg.tainted = true
 	return true
+}
+
+func (t *tree) Set(config, section, option string, values ...string) bool {
+	if len(values) > 1 {
+		return t.SetType(config, section, option, TypeList, values...)
+	}
+	return t.SetType(config, section, option, TypeOption, values...)
 }
 
 func (t *tree) Del(config, section, option string) {

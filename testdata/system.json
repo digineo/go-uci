@@ -3,27 +3,27 @@
   "sections": [{
     "type": "system",
     "options": [
-      { "name": "timezone",     "values": ["UTC"] },
-      { "name": "ttylogin",     "values": ["0"] },
-      { "name": "log_size",     "values": ["64"] },
-      { "name": "urandom_seed", "values": ["0"] },
-      { "name": "hostname",     "values": ["testhost"] }
+      { "name": "timezone", "type":"option",     "values": ["UTC"] },
+      { "name": "ttylogin", "type":"option",     "values": ["0"] },
+      { "name": "log_size", "type":"option",     "values": ["64"] },
+      { "name": "urandom_seed", "type":"option", "values": ["0"] },
+      { "name": "hostname", "type":"option",     "values": ["testhost"] }
     ]
   },{
     "name": "ntp",
     "type": "timeserver",
     "options": [
-      { "name": "enabled",       "values": ["1"] },
-      { "name": "enable_server", "values": ["0"] },
-      { "name": "server",        "values": ["0.lede.pool.ntp.org", "1.lede.pool.ntp.org", "2.lede.pool.ntp.org", "3.lede.pool.ntp.org"] }
+      { "name": "enabled", "type":"option",       "values": ["1"] },
+      { "name": "enable_server", "type":"option", "values": ["0"] },
+      { "name": "server", "type":"list",        "values": ["0.lede.pool.ntp.org", "1.lede.pool.ntp.org", "2.lede.pool.ntp.org", "3.lede.pool.ntp.org"] }
     ]
   },{
     "name": "poe_passthrough",
     "type": "gpio_switch",
     "options": [
-      { "name": "name",     "values": ["PoE Passthrough"] },
-      { "name": "gpio_pin", "values": ["0"] },
-      { "name": "value",    "values": ["0"] }
+      { "name": "name", "type":"option",     "values": ["PoE Passthrough"] },
+      { "name": "gpio_pin", "type":"option", "values": ["0"] },
+      { "name": "value", "type":"option",    "values": ["0"] }
     ]
   }]
 }

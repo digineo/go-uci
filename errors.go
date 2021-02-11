@@ -12,6 +12,15 @@ func (err ErrConfigAlreadyLoaded) Error() string {
 	return fmt.Sprintf("%s already loaded", err.Name)
 }
 
+// ErrUnknownOptionType is returned when trying to parse an invalid optiontype
+type ErrUnknownOptionType struct {
+	Type string
+}
+
+func (err ErrUnknownOptionType) Error() string {
+	return fmt.Sprintf("Unknown Option type %s", err.Type)
+}
+
 // IsConfigAlreadyLoaded reports, whether err is of type ErrConfigAlredyLoaded.
 func IsConfigAlreadyLoaded(err error) bool {
 	if err == nil {
