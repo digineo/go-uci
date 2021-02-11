@@ -84,7 +84,7 @@ func (s *scanner) backup(it item) {
 	s.last = &it
 }
 
-func (s *scanner) accept(it itemType) bool {
+func (s *scanner) accept(it ItemType) bool {
 	tok := s.next()
 	if tok.typ == it {
 		s.curr = append(s.curr, tok)
@@ -157,9 +157,9 @@ func scanSection(s *scanner) scanFn {
 func scanOption(s *scanner) scanFn {
 	it := s.next()
 	switch it.typ {
-	case itemOption:
+	case ItemOption:
 		return scanOptionName
-	case itemList:
+	case ItemList:
 		return scanListName
 	case itemError:
 		return s.errorf(it.val)
@@ -252,7 +252,7 @@ func parse(name, input string) (cfg *config, err error) {
 			if opt := sec.Get(name); opt != nil {
 				opt.SetValues(val)
 			} else {
-				sec.Add(newOption(name, val))
+				sec.Add(newOption(name, ItemOption, val))
 			}
 
 		case tokList:
@@ -262,7 +262,7 @@ func parse(name, input string) (cfg *config, err error) {
 			if opt := sec.Get(name); opt != nil {
 				opt.MergeValues(val)
 			} else {
-				sec.Add(newOption(name, val))
+				sec.Add(newOption(name, ItemList, val))
 			}
 		}
 		return true

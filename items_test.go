@@ -22,7 +22,7 @@ func TestItemTypeString(t *testing.T) {
 	}
 
 	for i, expected := range names {
-		subject := itemType(i)
+		subject := ItemType(i)
 		assert.Equal(expected, subject.String())
 	}
 }

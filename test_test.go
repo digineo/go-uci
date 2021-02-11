@@ -34,7 +34,7 @@ func (t scanToken) mk(items ...item) token {
 	return token{t, items}
 }
 
-func (i itemType) mk(val string) item {
+func (i ItemType) mk(val string) item {
 	return item{i, val, -1}
 }
 
@@ -127,7 +127,7 @@ var lexerTests = []struct {
 	{"empty2", tcEmptyInput2, []item{}},
 	{"simple", tcSimpleInput, []item{
 		itemConfig.mk("config"), itemIdent.mk("sectiontype"), itemString.mk("sectionname"),
-		itemOption.mk("option"), itemIdent.mk("optionname"), itemString.mk("optionvalue"),
+		ItemOption.mk("option"), itemIdent.mk("optionname"), itemString.mk("optionvalue"),
 	}},
 	{"export", tcExportInput, []item{
 		itemPackage.mk("package"), itemString.mk("pkgname"),
@@ -138,42 +138,42 @@ var lexerTests = []struct {
 	}},
 	{"unquoted", tcUnquotedInput, []item{
 		itemConfig.mk("config"), itemIdent.mk("foo"), itemString.mk("bar"),
-		itemOption.mk("option"), itemIdent.mk("answer"), itemString.mk("42"),
+		ItemOption.mk("option"), itemIdent.mk("answer"), itemString.mk("42"),
 	}},
 	{"unnamed", tcUnnamedInput, []item{
 		itemConfig.mk("config"), itemIdent.mk("foo"), itemString.mk("named"),
-		itemOption.mk("option"), itemIdent.mk("pos"), itemString.mk("0"),
-		itemOption.mk("option"), itemIdent.mk("unnamed"), itemString.mk("0"),
-		itemList.mk("list"), itemIdent.mk("list"), itemString.mk("0"),
+		ItemOption.mk("option"), itemIdent.mk("pos"), itemString.mk("0"),
+		ItemOption.mk("option"), itemIdent.mk("unnamed"), itemString.mk("0"),
+		ItemList.mk("list"), itemIdent.mk("list"), itemString.mk("0"),
 
 		itemConfig.mk("config"), itemIdent.mk("foo"), // unnamed
-		itemOption.mk("option"), itemIdent.mk("pos"), itemString.mk("1"),
-		itemOption.mk("option"), itemIdent.mk("unnamed"), itemString.mk("1"),
-		itemList.mk("list"), itemIdent.mk("list"), itemString.mk("10"),
+		ItemOption.mk("option"), itemIdent.mk("pos"), itemString.mk("1"),
+		ItemOption.mk("option"), itemIdent.mk("unnamed"), itemString.mk("1"),
+		ItemList.mk("list"), itemIdent.mk("list"), itemString.mk("10"),
 
 		itemConfig.mk("config"), itemIdent.mk("foo"), // unnamed
-		itemOption.mk("option"), itemIdent.mk("pos"), itemString.mk("2"),
-		itemOption.mk("option"), itemIdent.mk("unnamed"), itemString.mk("1"),
-		itemList.mk("list"), itemIdent.mk("list"), itemString.mk("20"),
+		ItemOption.mk("option"), itemIdent.mk("pos"), itemString.mk("2"),
+		ItemOption.mk("option"), itemIdent.mk("unnamed"), itemString.mk("1"),
+		ItemList.mk("list"), itemIdent.mk("list"), itemString.mk("20"),
 
 		itemConfig.mk("config"), itemIdent.mk("foo"), itemString.mk("named"),
-		itemOption.mk("option"), itemIdent.mk("pos"), itemString.mk("3"),
-		itemOption.mk("option"), itemIdent.mk("unnamed"), itemString.mk("0"),
-		itemList.mk("list"), itemIdent.mk("list"), itemString.mk("30"),
+		ItemOption.mk("option"), itemIdent.mk("pos"), itemString.mk("3"),
+		ItemOption.mk("option"), itemIdent.mk("unnamed"), itemString.mk("0"),
+		ItemList.mk("list"), itemIdent.mk("list"), itemString.mk("30"),
 	}},
 	{"hyphenated", tcHyphenatedInput, []item{
 		itemConfig.mk("config"), itemIdent.mk("wifi-device"), itemString.mk("wl0"),
-		itemOption.mk("option"), itemIdent.mk("type"), itemString.mk("broadcom"),
-		itemOption.mk("option"), itemIdent.mk("channel"), itemString.mk("6"),
+		ItemOption.mk("option"), itemIdent.mk("type"), itemString.mk("broadcom"),
+		ItemOption.mk("option"), itemIdent.mk("channel"), itemString.mk("6"),
 		itemConfig.mk("config"), itemIdent.mk("wifi-iface"), itemString.mk("wifi0"),
-		itemOption.mk("option"), itemIdent.mk("device"), itemString.mk("wl0"),
-		itemOption.mk("option"), itemIdent.mk("mode"), itemString.mk("ap"),
+		ItemOption.mk("option"), itemIdent.mk("device"), itemString.mk("wl0"),
+		ItemOption.mk("option"), itemIdent.mk("mode"), itemString.mk("ap"),
 	}},
 	{"commented", tcComment, []item{
 		itemConfig.mk("config"), itemIdent.mk("foo"), // unnamed
-		itemOption.mk("option"), itemIdent.mk("opt1"), itemString.mk("1"),
-		itemOption.mk("option"), itemIdent.mk("opt2"), itemString.mk("3"),
-		itemOption.mk("option"), itemIdent.mk("opt3"), itemString.mk("hello"),
+		ItemOption.mk("option"), itemIdent.mk("opt1"), itemString.mk("1"),
+		ItemOption.mk("option"), itemIdent.mk("opt2"), itemString.mk("3"),
+		ItemOption.mk("option"), itemIdent.mk("opt3"), itemString.mk("hello"),
 	}},
 	{"invalid", tcInvalid, []item{
 		itemError.mk("expected keyword (package, config, option, list) or eof"),
@@ -187,7 +187,7 @@ var lexerTests = []struct {
 	}},
 	{"unterminated unquoted string", tcUnterminatedUnquoted, []item{
 		itemConfig.mk("config"), itemIdent.mk("foo"), // unnamed
-		itemOption.mk("option"), itemIdent.mk("opt"), itemError.mk("unterminated unquoted string"),
+		ItemOption.mk("option"), itemIdent.mk("opt"), itemError.mk("unterminated unquoted string"),
 	}},
 }
 

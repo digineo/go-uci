@@ -85,7 +85,7 @@ func (l *lexer) eof() item {
 // emit emits a token
 //
 // https://talks.golang.org/2011/lex.slide#25
-func (l *lexer) emit(t itemType) {
+func (l *lexer) emit(t ItemType) {
 	if l.pos > l.start {
 		l.items <- item{t, l.input[l.start:l.pos], l.pos}
 		l.start = l.pos
@@ -93,7 +93,7 @@ func (l *lexer) emit(t itemType) {
 }
 
 // emitString emits a string token. it removes the surrounding quotes
-func (l *lexer) emitString(t itemType) {
+func (l *lexer) emitString(t ItemType) {
 	if l.pos-1 > l.start+1 {
 		l.items <- item{t, l.input[l.start+1 : l.pos-1], l.pos}
 		l.start = l.pos
@@ -283,14 +283,14 @@ func lexOptionalName(l *lexer) stateFn {
 
 func lexOption(l *lexer) stateFn {
 	l.pos += len(kwOption)
-	l.emit(itemOption)
+	l.emit(ItemOption)
 	l.consumeWhitespace()
 	return lexOptionName
 }
 
 func lexList(l *lexer) stateFn {
 	l.pos += len(kwList)
-	l.emit(itemList)
+	l.emit(ItemList)
 	l.consumeWhitespace()
 	return lexOptionName
 }

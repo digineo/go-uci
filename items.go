@@ -6,32 +6,32 @@ import "fmt"
 //
 // https://talks.golang.org/2011/lex.slide#8
 type item struct {
-	typ itemType
+	typ ItemType
 	val string
 	pos int
 }
 
-// itemType defines the kind of lexed item
+// ItemType defines the kind of lexed item
 //
 // https://talks.golang.org/2011/lex.slide#9
-type itemType int
+type ItemType int
 
 // these items define the UCI language
 const (
-	itemError itemType = iota // error occurred; item.val is text of error
+	itemError ItemType = iota // error occurred; item.val is text of error
 
 	itemBOF // begin of file; lexing starts here
 	itemEOF // end of file; lexing ends here
 
 	itemPackage // package keyword
 	itemConfig  // config keyword
-	itemOption  // option keyword
-	itemList    // list keyword
+	ItemOption  // option keyword
+	ItemList    // list keyword
 	itemIdent   // identifier string
 	itemString  // quoted string
 )
 
-func (t itemType) String() string {
+func (t ItemType) String() string {
 	switch t {
 	case itemError:
 		return "Error"
@@ -43,9 +43,9 @@ func (t itemType) String() string {
 		return "Package"
 	case itemConfig:
 		return "Config"
-	case itemOption:
+	case ItemOption:
 		return "Option"
-	case itemList:
+	case ItemList:
 		return "List"
 	case itemIdent:
 		return "Ident"

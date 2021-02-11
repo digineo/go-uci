@@ -3,86 +3,86 @@
   "sections": [{
     "type": "network",
     "options": [
-      { "name": "init",    "values": ["network"] },
-      { "name": "affects", "values": ["dhcp", "radvd"] }
+      { "name": "init", "type":5,    "values": ["network"] },
+      { "name": "affects", "type":6, "values": ["dhcp", "radvd"] }
     ]
   },{
     "type": "wireless",
     "options": [
-      { "name": "affects", "values": ["network"] }
+      { "name": "affects", "type":6, "values": ["network"] }
     ]
   },{
     "type": "firewall",
     "options": [
-      { "name": "init",    "values": ["firewall"] },
-      { "name": "affects", "values": ["luci-splash", "qos", "miniupnpd"] }
+      { "name": "init", "type":5,    "values": ["firewall"] },
+      { "name": "affects", "type":6, "values": ["luci-splash", "qos", "miniupnpd"] }
     ]
   },{
     "type": "olsr",
     "options": [
-      { "name": "init", "values": ["olsrd"] }
+      { "name": "init", "type":5, "values": ["olsrd"] }
     ]
   },{
     "type": "dhcp",
     "options": [
-      { "name": "init",    "values": ["dnsmasq"] },
-      { "name": "affects", "values": ["odhcpd"] }
+      { "name": "init",  "type":5,   "values": ["dnsmasq"] },
+      { "name": "affects", "type":6, "values": ["odhcpd"] }
     ]
   },{
     "type": "odhcpd",
     "options": [
-      { "name": "init", "values": ["odhcpd"] }
+      { "name": "init", "type":5, "values": ["odhcpd"] }
     ]
   },{
     "type": "dropbear",
     "options": [
-      { "name": "init", "values": ["dropbear"] }
+      { "name": "init", "type":5, "values": ["dropbear"] }
     ]
   },{
     "type": "httpd",
     "options": [
-      { "name": "init", "values": ["httpd"] }
+      { "name": "init", "type":5, "values": ["httpd"] }
     ]
   },{
     "type": "fstab",
     "options": [
-      { "name": "init", "values": ["fstab"] }
+      { "name": "init", "type":5, "values": ["fstab"] }
     ]
   },{
     "type": "qos",
     "options": [
-      { "name": "init", "values": ["qos"] }
+      { "name": "init","type":5, "values": ["qos"] }
     ]
   },{
     "type": "system",
     "options": [
-      { "name": "init",    "values": ["led"] },
-      { "name": "affects", "values": ["luci_statistics", "dhcp"] }
+      { "name": "init", "type":5,    "values": ["led"] },
+      { "name": "affects", "type":6, "values": ["luci_statistics", "dhcp"] }
     ]
   },{
     "type": "luci_splash",
     "options": [
-      { "name": "init", "values": ["luci_splash"] }
+      { "name": "init", "type":5, "values": ["luci_splash"] }
     ]
   },{
     "type": "upnpd",
     "options": [
-      { "name": "init", "values": ["miniupnpd"] }
+      { "name": "init", "type":5, "values": ["miniupnpd"] }
     ]
   },{
     "type": "ntpclient",
     "options": [
-      { "name": "init", "values": ["ntpclient"] }
+      { "name": "init", "type":5, "values": ["ntpclient"] }
     ]
   },{
     "type": "samba",
     "options": [
-      { "name": "init", "values": ["samba"] }
+      { "name": "init", "type":5, "values": ["samba"] }
     ]
   },{
     "type": "tinyproxy",
     "options": [
-      { "name": "init", "values": ["tinyproxy"] }
+      { "name": "init", "type":5, "values": ["tinyproxy"] }
     ]
   }]
 }
