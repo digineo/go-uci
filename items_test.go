@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestitemTypeString(t *testing.T) {
+func TestItemTypeString(t *testing.T) {
 	assert := assert.New(t)
 	names := []string{
 		"Error",
