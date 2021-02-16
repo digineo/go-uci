@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestItemTypeString(t *testing.T) {
+func TestitemTypeString(t *testing.T) {
 	assert := assert.New(t)
 	names := []string{
 		"Error",
@@ -22,7 +22,7 @@ func TestItemTypeString(t *testing.T) {
 	}
 
 	for i, expected := range names {
-		subject := ItemType(i)
+		subject := itemType(i)
 		assert.Equal(expected, subject.String())
 	}
 }

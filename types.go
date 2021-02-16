@@ -43,9 +43,9 @@ func (c *config) WriteTo(w io.Writer) (n int64, err error) {
 
 		for _, opt := range sec.Options {
 			switch opt.Type {
-			case ItemOption:
+			case TypeOption:
 				fmt.Fprintf(&buf, "\toption %s '%s'\n", opt.Name, opt.Values[0])
-			case ItemList:
+			case TypeList:
 				for _, v := range opt.Values {
 					fmt.Fprintf(&buf, "\tlist %s '%s'\n", opt.Name, v)
 				}
@@ -269,13 +269,13 @@ func (s *section) Get(name string) *option {
 // An Option is the key to one or more values. Multiple values indicate
 // a list option.
 type option struct {
-	Name   string   `json:"name"`
-	Values []string `json:"values"`
-	Type   ItemType `json:"type"`
+	Name   string     `json:"name"`
+	Values []string   `json:"values"`
+	Type   OptionType `json:"type"`
 }
 
 // newOption returns a new option object.
-func newOption(name string, optionType ItemType, values ...string) *option {
+func newOption(name string, optionType OptionType, values ...string) *option {
 	return &option{
 		Name:   name,
 		Values: values,

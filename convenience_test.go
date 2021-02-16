@@ -55,8 +55,8 @@ func (m *mockTree) Set(config, section, option string, values ...string) bool {
 	return args.Bool(0)
 }
 
-func (m *mockTree) SetType(config, section, option string, itemType ItemType, values ...string) bool {
-	args := m.Called(config, section, option, itemType, values)
+func (m *mockTree) SetType(config, section, option string, OptionType OptionType, values ...string) bool {
+	args := m.Called(config, section, option, OptionType, values)
 	return args.Bool(0)
 }
 

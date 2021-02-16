@@ -1,37 +1,72 @@
 package uci
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+)
 
 // item represents a lexeme (token)
 //
 // https://talks.golang.org/2011/lex.slide#8
 type item struct {
-	typ ItemType
+	typ itemType
 	val string
 	pos int
 }
 
-// ItemType defines the kind of lexed item
+type OptionType int
+
+const (
+	TypeOption OptionType = iota // option is not a list
+	TypeList                     // option is a list
+)
+
+// MarshalJSON implements encoding/json.Marshaler.
+func (ot OptionType) MarshalJSON() ([]byte, error) {
+	switch ot {
+	case TypeOption:
+		return []byte("\"option\""), nil
+	case TypeList:
+		return []byte("\"list\""), nil
+	default:
+		return nil, ErrUnknownOptionType{Type: fmt.Sprint(ot)}
+	}
+}
+
+// UnmarshalJSON implements encoding/json.Unmarshaler.
+func (ot *OptionType) UnmarshalJSON(b []byte) error {
+	if len(b) == 0 || bytes.Equal(b, []byte("null")) || bytes.Equal(b, []byte("\"option\"")) {
+		*ot = TypeOption
+		return nil
+	}
+	if bytes.Equal(b, []byte("\"list\"")) {
+		*ot = TypeList
+		return nil
+	}
+	return ErrUnknownOptionType{Type: fmt.Sprint(*ot)}
+}
+
+// itemType defines the kind of lexed item
 //
 // https://talks.golang.org/2011/lex.slide#9
-type ItemType int
+type itemType int
 
 // these items define the UCI language
 const (
-	itemError ItemType = iota // error occurred; item.val is text of error
+	itemError itemType = iota // error occurred; item.val is text of error
 
 	itemBOF // begin of file; lexing starts here
 	itemEOF // end of file; lexing ends here
 
 	itemPackage // package keyword
 	itemConfig  // config keyword
-	ItemOption  // option keyword
-	ItemList    // list keyword
+	itemOption  // option keyword
+	itemList    // list keyword
 	itemIdent   // identifier string
 	itemString  // quoted string
 )
 
-func (t ItemType) String() string {
+func (t itemType) String() string {
 	switch t {
 	case itemError:
 		return "Error"
@@ -43,9 +78,9 @@ func (t ItemType) String() string {
 		return "Package"
 	case itemConfig:
 		return "Config"
-	case ItemOption:
+	case itemOption:
 		return "Option"
-	case ItemList:
+	case itemList:
 		return "List"
 	case itemIdent:
 		return "Ident"

@@ -60,7 +60,7 @@ type Tree interface {
 	Set(config, section, option string, values ...string) bool
 
 	// SetType sets the option type. Either ItemList or ItemOption.
-	SetType(config, section, option string, itemType ItemType, values ...string) bool
+	SetType(config, section, option string, optionType OptionType, values ...string) bool
 
 	// Del removes a fully qualified option.
 	Del(config, section, option string)
@@ -239,7 +239,7 @@ func (t *tree) lookupValues(config, section, option string) ([]string, bool) {
 	return opt.Values, true
 }
 
-func (t *tree) SetType(config, section, option string, itemType ItemType, values ...string) bool {
+func (t *tree) SetType(config, section, option string, optionType OptionType, values ...string) bool {
 	t.Lock()
 	defer t.Unlock()
 
@@ -255,14 +255,14 @@ func (t *tree) SetType(config, section, option string, itemType ItemType, values
 	if opt := sec.Get(option); opt != nil {
 		opt.SetValues(values...)
 	} else {
-		sec.Add(newOption(option, itemType, values...))
+		sec.Add(newOption(option, optionType, values...))
 	}
 	cfg.tainted = true
 	return true
 }
 
 func (t *tree) Set(config, section, option string, values ...string) bool {
-	return t.SetType(config, section, option, ItemOption, values...)
+	return t.SetType(config, section, option, TypeOption, values...)
 }
 
 func (t *tree) Del(config, section, option string) {
