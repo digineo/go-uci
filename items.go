@@ -25,11 +25,11 @@ const (
 func (ot OptionType) MarshalJSON() ([]byte, error) {
 	switch ot {
 	case TypeOption:
-		return []byte("\"option\""), nil
+		return []byte(`"option"`), nil
 	case TypeList:
-		return []byte("\"list\""), nil
+		return []byte(`"list"`), nil
 	default:
-		return nil, ErrUnknownOptionType{Type: fmt.Sprint(ot)}
+		return nil, ErrUnknownOptionType{Type: fmt.Sprintf("!OptionType(%02x)", ot)}
 	}
 }
 
@@ -39,11 +39,11 @@ func (ot *OptionType) UnmarshalJSON(b []byte) error {
 		*ot = TypeOption
 		return nil
 	}
-	if bytes.Equal(b, []byte("\"list\"")) {
+	if bytes.Equal(b, []byte(`"list"`)) {
 		*ot = TypeList
 		return nil
 	}
-	return ErrUnknownOptionType{Type: fmt.Sprint(*ot)}
+	return ErrUnknownOptionType{Type: string(b)}
 }
 
 // itemType defines the kind of lexed item
