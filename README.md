@@ -3,12 +3,13 @@
 > **WORK IN PROGRESS**
 
 [![GoDoc][godoc-badge]][godoc]
-[![CircleCI](https://circleci.com/gh/digineo/go-uci/tree/master.svg?style=shield)](https://circleci.com/gh/digineo/go-uci/tree/master)
+[![Test results](https://github.com/digineo/go-uci/workflows/Test/badge.svg)](https://github.com/digineo/go-uci/actions?query=workflow%3ATest)
+[![Lint results](https://github.com/digineo/go-uci/workflows/Lint/badge.svg)](https://github.com/digineo/go-uci/actions?query=workflow%3ALint)
 [![Codecov](http://codecov.io/github/digineo/go-uci/coverage.svg?branch=master)](http://codecov.io/github/digineo/go-uci?branch=master)
 
 
-[godoc]:       https://godoc.org/github.com/digineo/go-uci
-[godoc-badge]: https://godoc.org/github.com/digineo/go-uci?status.svg
+[godoc]:       https://pkg.go.dev/github.com/digineo/go-uci
+[godoc-badge]: https://pkg.go.dev/badge/github.com/digineo/go-uci.svg
 
 UCI is OpenWRT's [Unified Configuration Interface][uci-wiki]. It is
 used to configure OpenWRT router hardware using a simple DSL (and
