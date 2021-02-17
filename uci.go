@@ -118,7 +118,7 @@ func (t *tree) LoadConfig(name string, forceReload bool) error {
 // loadConfig actually reads a config file. Its call must be guarded by
 // locking the tree's mutex.
 func (t *tree) loadConfig(name string) error {
-	body, err := os.ReadFile(filepath.Join(t.dir, name))
+	body, err := ioutil.ReadFile(filepath.Join(t.dir, name))
 	if err != nil {
 		return fmt.Errorf("reading config file failed: %w", err)
 	}
