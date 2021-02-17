@@ -1,7 +1,6 @@
 package uci
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -109,7 +108,7 @@ func (s *scanner) errorf(format string, args ...interface{}) scanFn {
 
 // scanStart looks for a "package" or "config" item.
 func scanStart(s *scanner) scanFn {
-	switch it := s.next(); it.typ {
+	switch it := s.next(); it.typ { //nolint:exhaustive
 	case itemPackage:
 		return scanPackage
 	case itemConfig:
@@ -118,26 +117,28 @@ func scanStart(s *scanner) scanFn {
 		return s.errorf(it.val)
 	case itemEOF:
 		return nil
+	default:
+		return s.errorf("expected package or config token, got %s", it)
 	}
-	return s.errorf("expected package or config token")
 }
 
-// scanPackage looks for a package name
+// scanPackage looks for a package name.
 func scanPackage(s *scanner) scanFn {
-	switch it := s.next(); it.typ {
+	switch it := s.next(); it.typ { //nolint:exhaustive
 	case itemString:
 		s.curr = append(s.curr, it)
 		s.emit(tokPackage)
 		return scanStart
 	case itemError:
 		return s.errorf(it.val)
+	default:
+		return s.errorf("expected string value while parsing package, got %s", it)
 	}
-	return s.errorf("expected string value while parsing package")
 }
 
-// scanSection looks for a section type and optional a name
+// scanSection looks for a section type and optional a name.
 func scanSection(s *scanner) scanFn {
-	switch it := s.next(); it.typ {
+	switch it := s.next(); it.typ { //nolint:exhaustive
 	case itemIdent:
 		s.curr = append(s.curr, it)
 		// the name is optional
@@ -148,15 +149,16 @@ func scanSection(s *scanner) scanFn {
 		return scanOption
 	case itemError:
 		return s.errorf(it.val)
+	default:
+		return s.errorf("expected identifier while parsing config section, got %s", it)
 	}
-	return s.errorf("expected identifier while parsing config section")
 }
 
 // scanOption looks for either an "option" or "list" keyword (with name
-// and value), or it falls back to scanStart
+// and value), or it falls back to scanStart.
 func scanOption(s *scanner) scanFn {
 	it := s.next()
-	switch it.typ {
+	switch it.typ { //nolint:exhaustive
 	case itemOption:
 		return scanOptionName
 	case itemList:
@@ -169,7 +171,7 @@ func scanOption(s *scanner) scanFn {
 	}
 }
 
-// scanOptionName looks for a name of a string option
+// scanOptionName looks for a name of a string option.
 func scanOptionName(s *scanner) scanFn {
 	if s.accept(itemIdent) {
 		return scanOptionValue
@@ -177,7 +179,7 @@ func scanOptionName(s *scanner) scanFn {
 	return s.errorf("expected option name")
 }
 
-// scanListName looks for a name of a list option
+// scanListName looks for a name of a list option.
 func scanListName(s *scanner) scanFn {
 	if s.accept(itemIdent) {
 		return scanListValue
@@ -185,30 +187,32 @@ func scanListName(s *scanner) scanFn {
 	return s.errorf("expected option name")
 }
 
-// scanOptionValue looks for the value associated with an option
+// scanOptionValue looks for the value associated with an option.
 func scanOptionValue(s *scanner) scanFn {
-	switch it := s.next(); it.typ {
+	switch it := s.next(); it.typ { //nolint:exhaustive
 	case itemString:
 		s.curr = append(s.curr, it)
 		s.emit(tokOption)
 		return scanOption
 	case itemError:
 		return s.errorf(it.val)
+	default:
+		return s.errorf("expected option value, got %s", it)
 	}
-	return s.errorf("expected option value")
 }
 
-// scanListValue looks for the value associated with an option
+// scanListValue looks for the value associated with an option.
 func scanListValue(s *scanner) scanFn {
-	switch it := s.next(); it.typ {
+	switch it := s.next(); it.typ { //nolint:exhaustive
 	case itemString:
 		s.curr = append(s.curr, it)
 		s.emit(tokList)
 		return scanOption
 	case itemError:
 		return s.errorf(it.val)
+	default:
+		return s.errorf("expected option value, got %s", it)
 	}
-	return s.errorf("expected option value")
 }
 
 func (s *scanner) each(fn func(token) bool) bool {
@@ -227,14 +231,14 @@ func parse(name, input string) (cfg *config, err error) {
 	var sec *section
 
 	scan(name, input).each(func(tok token) bool {
-		switch tok.typ {
+		switch tok.typ { //nolint:exhaustive
 		case tokError:
 			perr := ParseError(tok.items[0].val)
 			err = &perr
 			return false
 
 		case tokPackage:
-			err = errors.New("UCI imports/exports are not yet supported")
+			err = ParseError("UCI imports/exports are not yet supported")
 			return false
 
 		case tokSection:

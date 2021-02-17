@@ -69,7 +69,9 @@ func TestLoadConfig_nonExistent(t *testing.T) {
 	assert := assert.New(t)
 	r := NewTree("testdata")
 	err := r.LoadConfig("nonexistent", false)
-	assert.True(os.IsNotExist(err))
+
+	// os.IsNotExist fails on 1.16, https://golang.org/issue/44349
+	assert.True(errors.Is(err, os.ErrNotExist))
 }
 
 func TestLoadConfig_forceReload(t *testing.T) {
@@ -384,19 +386,19 @@ func TestCommit(t *testing.T) {
 		m.On("Rename", "testdata/cfgname").Return(onrename)
 	}
 
-	reset(errors.New("fail write"), nil, nil, nil)
+	reset(errors.New("fail write"), nil, nil, nil) //nolint:goerr113
 	assert.EqualError(r.Commit(), "fail write")
 	assert.Equal(0, m.Buffer.Len())
 
-	reset(nil, errors.New("fail chmod"), nil, nil)
-	assert.EqualError(r.Commit(), "fail chmod")
+	reset(nil, errors.New("fail chmod"), nil, nil) //nolint:goerr113
+	assert.EqualError(r.Commit(), "save: failed to set permissions: fail chmod")
 	assert.EqualValues(content, m.Buffer.String())
 
-	reset(nil, nil, errors.New("fail sync"), nil)
-	assert.EqualError(r.Commit(), "fail sync")
+	reset(nil, nil, errors.New("fail sync"), nil) //nolint:goerr113
+	assert.EqualError(r.Commit(), "save: failed to sync: fail sync")
 
-	reset(nil, nil, nil, errors.New("fail rename"))
-	assert.EqualError(r.Commit(), "fail rename")
+	reset(nil, nil, nil, errors.New("fail rename")) //nolint:goerr113
+	assert.EqualError(r.Commit(), "save: failed to replace existing config: fail rename")
 
 	reset(nil, nil, nil, nil)
 	assert.NoError(r.Commit())
@@ -410,7 +412,7 @@ type mockTempFile struct {
 func (m *mockTempFile) Write(p []byte) (int, error) {
 	args := m.Called(p)
 	if err := args.Error(0); err != nil {
-		return 0, err
+		return 0, err // nolint:wrapcheck
 	}
 	n, _ := m.Buffer.Write(p)
 	return n, nil

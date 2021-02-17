@@ -16,7 +16,7 @@ import (
 //
 //	DUMP="lex,token" go test -v ./...
 var dump = func() map[string]bool {
-	var m = make(map[string]bool)
+	m := make(map[string]bool)
 	for _, field := range strings.Split(os.Getenv("DUMP"), ",") {
 		if field == "all" {
 			m["json"] = true
@@ -34,15 +34,18 @@ func (t scanToken) mk(items ...item) token {
 	return token{t, items}
 }
 
-func (i itemType) mk(val string) item {
-	return item{i, val, -1}
+func (t itemType) mk(val string) item {
+	return item{t, val, -1}
 }
 
 const tcEmptyInput1 = ""
+
 const tcEmptyInput2 = "  \n\t\n\n \n "
+
 const tcSimpleInput = `config sectiontype 'sectionname'
 	option optionname 'optionvalue'
 `
+
 const tcExportInput = `package "pkgname"
 config empty
 config squoted 'sqname'
@@ -176,7 +179,7 @@ var lexerTests = []struct {
 		itemOption.mk("option"), itemIdent.mk("opt3"), itemString.mk("hello"),
 	}},
 	{"invalid", tcInvalid, []item{
-		itemError.mk("expected keyword (package, config, option, list) or eof"),
+		itemError.mk(`expected keyword (package, config, option, list) or eof, got "<?xml vers…"`),
 	}},
 	{"pkg invalid", tcIncompletePackage, []item{
 		itemPackage.mk("package"),
@@ -248,7 +251,7 @@ var parserTests = []struct {
 		tokOption.mk(itemIdent.mk("opt3"), itemString.mk("hello")),
 	}},
 	{"invalid", tcInvalid, []token{
-		tokError.mk(itemError.mk("expected keyword (package, config, option, list) or eof")),
+		tokError.mk(itemError.mk(`expected keyword (package, config, option, list) or eof, got "<?xml vers…"`)),
 	}},
 	{"pkg invalid", tcIncompletePackage, []token{
 		tokError.mk(itemError.mk("incomplete package name")),

@@ -55,8 +55,8 @@ func (m *mockTree) Set(config, section, option string, values ...string) bool {
 	return args.Bool(0)
 }
 
-func (m *mockTree) SetType(config, section, option string, OptionType OptionType, values ...string) bool {
-	args := m.Called(config, section, option, OptionType, values)
+func (m *mockTree) SetType(config, section, option string, typ OptionType, values ...string) bool {
+	args := m.Called(config, section, option, typ, values)
 	return args.Bool(0)
 }
 
@@ -164,7 +164,7 @@ func TestConvenienceAddSection(t *testing.T) {
 	assert := assert.New(t)
 	m := defaultTree.(*mockTree)
 	m.On("AddSection", "foo", "bar", "system").Return(nil)
-	m.On("AddSection", "foo", "bar", "interface").Return(errors.New("invalid"))
+	m.On("AddSection", "foo", "bar", "interface").Return(errors.New("invalid")) //nolint:goerr113
 	assert.Error(AddSection("foo", "bar", "interface"))
 	assert.NoError(AddSection("foo", "bar", "system"))
 	m.AssertExpectations(t)

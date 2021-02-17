@@ -2,6 +2,7 @@ package uci
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -76,14 +77,23 @@ func (c *config) getNamed(name string) *section {
 	return nil
 }
 
-func unmangleSectionName(name string) (typ string, index int, err error) {
+var (
+	ErrImplausibleSectionSelector = errors.New("implausible section selector: must be at least 5 characters long")
+	ErrMustStartWithAt            = errors.New("invalid syntax: section selector must start with @ sign")
+	ErrMultipleAtSigns            = errors.New("invalid syntax: multiple @ signs found")
+	ErrMultipleOpenBrackets       = errors.New("invalid syntax: multiple open brackets found")
+	ErrMultipleCloseBrackets      = errors.New("invalid syntax: multiple closed brackets found")
+	ErrInvalidSectionSelector     = errors.New("invalid syntax: section selector must have format '@type[index]'")
+)
+
+func unmangleSectionName(name string) (typ string, index int, err error) { //nolint:cyclop
 	l := len(name)
 	if l < 5 { // "@a[0]"
-		err = fmt.Errorf("implausible section selector: must be at least 5 characters long")
+		err = ErrImplausibleSectionSelector
 		return
 	}
 	if name[0] != '@' {
-		err = fmt.Errorf("invalid syntax: section selector must start with @ sign")
+		err = ErrMustStartWithAt
 		return
 	}
 
@@ -91,13 +101,13 @@ func unmangleSectionName(name string) (typ string, index int, err error) {
 	for i, r := range name {
 		switch {
 		case i != 0 && r == '@':
-			err = fmt.Errorf("invalid syntax: multiple @ signs found")
+			err = ErrMultipleAtSigns
 			return
 		case r == '[' && bra > 0:
-			err = fmt.Errorf("invalid syntax: multiple open brackets found")
+			err = ErrMultipleOpenBrackets
 			return
 		case r == ']' && i != ket:
-			err = fmt.Errorf("invalid syntax: multiple closed brackets found")
+			err = ErrMultipleCloseBrackets
 			return
 		case r == '[':
 			bra = i
@@ -105,14 +115,19 @@ func unmangleSectionName(name string) (typ string, index int, err error) {
 	}
 
 	if bra == 0 || bra >= ket {
-		err = fmt.Errorf("invalid syntax: section selector must have format '@type[index]'")
+		err = ErrInvalidSectionSelector
 		return
 	}
 
 	typ = name[1:bra]
 	index, err = strconv.Atoi(name[bra+1 : ket])
+	if err != nil {
+		err = fmt.Errorf("invalid syntax: index must be numeric: %w", err)
+	}
 	return typ, index, err
 }
+
+var ErrUnnamedIndexOutOfBounds = errors.New("invalid name: index out of bounds")
 
 func (c *config) getUnnamed(name string) (*section, error) {
 	typ, idx, err := unmangleSectionName(name)
@@ -122,7 +137,7 @@ func (c *config) getUnnamed(name string) (*section, error) {
 
 	count := c.count(typ)
 	if -count > idx || idx >= count {
-		return nil, fmt.Errorf("invalid name: index out of bounds")
+		return nil, ErrUnnamedIndexOutOfBounds
 	}
 	if idx < 0 {
 		idx += count // count from the end

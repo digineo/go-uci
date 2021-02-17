@@ -1,6 +1,7 @@
 package uci
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -117,9 +118,9 @@ func (t *tree) LoadConfig(name string, forceReload bool) error {
 // loadConfig actually reads a config file. Its call must be guarded by
 // locking the tree's mutex.
 func (t *tree) loadConfig(name string) error {
-	body, err := ioutil.ReadFile(filepath.Join(t.dir, name))
+	body, err := os.ReadFile(filepath.Join(t.dir, name))
 	if err != nil {
-		return err
+		return fmt.Errorf("reading config file failed: %w", err)
 	}
 	cfg, err := parse(name, string(body))
 	if err != nil {
@@ -361,17 +362,17 @@ func (t *tree) saveConfig(c *config) error {
 	if err = f.Chmod(0644); err != nil {
 		f.Close()
 		_ = f.Remove()
-		return err
+		return fmt.Errorf("save: failed to set permissions: %w", err)
 	}
 	if err = f.Sync(); err != nil {
 		f.Close()
 		_ = f.Remove()
-		return err
+		return fmt.Errorf("save: failed to sync: %w", err)
 	}
 	f.Close()
 
 	if err = f.Rename(filepath.Join(t.dir, c.Name)); err != nil {
-		return err
+		return fmt.Errorf("save: failed to replace existing config: %w", err)
 	}
 
 	c.tainted = false
@@ -392,7 +393,7 @@ type tmpFile interface {
 var newTmpFile = func(dir, pattern string) (tmpFile, error) {
 	f, err := ioutil.TempFile(dir, pattern)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create temp file: %w", err)
 	}
 	return &tmpFileImpl{f}, nil
 }

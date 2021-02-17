@@ -51,7 +51,7 @@ func (ot *OptionType) UnmarshalJSON(b []byte) error {
 // https://talks.golang.org/2011/lex.slide#9
 type itemType int
 
-// these items define the UCI language
+// These items define the UCI language.
 const (
 	itemError itemType = iota // error occurred; item.val is text of error
 
@@ -91,7 +91,7 @@ func (t itemType) String() string {
 }
 
 // keyword represents a special marker of the input: each (trimmed,
-// non-empty) line of the input must start with a keywords
+// non-empty) line of the input must start with a keywords.
 type keyword string
 
 // these are the recognized keywords.

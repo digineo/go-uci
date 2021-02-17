@@ -6,12 +6,18 @@
     "--fast",
     "--enable-all",
     "--disable=errcheck",
+    "--disable=exhaustivestruct",
     "--disable=gas",
     "--disable=gochecknoglobals",
     "--disable=gochecknoinits",
     "--disable=gocyclo",
-    "--disable=lll",
-    "--disable=nakedret",
+    "--disable=gomnd", // too many false positives
+    "--disable=lll", // too opiniated
+    "--disable=nakedret", // too opiniated
+    "--disable=nlreturn", // too opiniated
+    "--disable=paralleltest", // defaultTree is a singleton
+    "--disable=testpackage", // we're testing internals
+    "--disable=wsl", // too opiniated
   ],
   "go.testFlags": ["-v"]
 }

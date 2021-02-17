@@ -18,14 +18,14 @@ func testLexer(t *testing.T, name, input string, expected []item) {
 	t.Helper()
 
 	if dump["lex"] {
-		defer fmt.Println("")
+		defer fmt.Println("") //nolint:forbidigo
 	}
 
 	l := lex(name, input)
 	var i int
 	for it := l.nextItem(); it.typ != itemEOF; it = l.nextItem() {
 		if dump["lex"] {
-			fmt.Print(it, " ")
+			fmt.Print(it, " ") //nolint:forbidigo
 		}
 
 		if i >= len(expected) {

@@ -20,7 +20,7 @@ func TestUnmangleSectionName(t *testing.T) {
 		"@[[0]":       {err: "invalid syntax: multiple open brackets found"},
 		"@][0]":       {err: "invalid syntax: multiple closed brackets found"},
 		"@aa0]":       {err: "invalid syntax: section selector must have format '@type[index]'"},
-		"@a[b]":       {err: `strconv.Atoi: parsing "b": invalid syntax`},
+		"@a[b]":       {err: `invalid syntax: index must be numeric: strconv.Atoi: parsing "b": invalid syntax`},
 
 		// valid test cases
 		"@a[0]":    {typ: "a", idx: 0},
@@ -29,7 +29,7 @@ func TestUnmangleSectionName(t *testing.T) {
 
 		// longer types/indices
 		"@abcdEFGHijkl[-255]": {typ: "abcdEFGHijkl", idx: -255},
-		"@abcdEFGHijkl[0xff]": {err: `strconv.Atoi: parsing "0xff": invalid syntax`},
+		"@abcdEFGHijkl[0xff]": {err: `invalid syntax: index must be numeric: strconv.Atoi: parsing "0xff": invalid syntax`},
 	}
 
 	for input := range tt {
@@ -49,7 +49,7 @@ func TestUnmangleSectionName(t *testing.T) {
 	}
 }
 
-func TestConfigGet(t *testing.T) {
+func TestConfigGet(t *testing.T) { //nolint:funlen
 	config, err := parse("unnamed", tcUnnamedInput)
 	assert.NoError(t, err)
 
