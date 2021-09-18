@@ -2,7 +2,7 @@
 
 > **WORK IN PROGRESS**
 
-[![GoDoc](https://pkg.go.dev/badge/github.com/digineo/go-uci.svg)][https://pkg.go.dev/github.com/digineo/go-uci]
+[![GoDoc](https://pkg.go.dev/badge/github.com/digineo/go-uci.svg)](https://pkg.go.dev/github.com/digineo/go-uci)
 [![Test results](https://github.com/digineo/go-uci/workflows/Test/badge.svg)](https://github.com/digineo/go-uci/actions?query=workflow%3ATest)
 [![Lint results](https://github.com/digineo/go-uci/workflows/Lint/badge.svg)](https://github.com/digineo/go-uci/actions?query=workflow%3ALint)
 [![Codecov](http://codecov.io/github/digineo/go-uci/coverage.svg?branch=master)](http://codecov.io/github/digineo/go-uci?branch=master)
