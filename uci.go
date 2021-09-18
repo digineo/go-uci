@@ -10,7 +10,7 @@ import (
 )
 
 // Tree defines the base directory for UCI config files. The default value
-// on OpenWRT devices point to /etc/config, so that is what the default
+// on OpenWrt devices point to /etc/config, so that is what the default
 // tree uses as well (you can access the default tree with the package level
 // functions with the same signature as in this interface).
 type Tree interface {
@@ -342,7 +342,7 @@ func (t *tree) saveConfig(c *config) error {
 	//
 	// The full path for f will hence be "$root/.$rnd.$name", which
 	// translates to something like "/etc/config/.42.network" on
-	// OpenWRT devices.
+	// OpenWrt devices.
 	//
 	// We rely a bit on the fact that UCI ignores dotfiles in /etc/config,
 	// so this should not interfere with normal operations when we leave

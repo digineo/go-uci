@@ -2,17 +2,14 @@
 
 > **WORK IN PROGRESS**
 
-[![GoDoc][godoc-badge]][godoc]
+[![GoDoc](https://pkg.go.dev/badge/github.com/digineo/go-uci.svg)][https://pkg.go.dev/github.com/digineo/go-uci]
 [![Test results](https://github.com/digineo/go-uci/workflows/Test/badge.svg)](https://github.com/digineo/go-uci/actions?query=workflow%3ATest)
 [![Lint results](https://github.com/digineo/go-uci/workflows/Lint/badge.svg)](https://github.com/digineo/go-uci/actions?query=workflow%3ALint)
 [![Codecov](http://codecov.io/github/digineo/go-uci/coverage.svg?branch=master)](http://codecov.io/github/digineo/go-uci?branch=master)
 
 
-[godoc]:       https://pkg.go.dev/github.com/digineo/go-uci
-[godoc-badge]: https://pkg.go.dev/badge/github.com/digineo/go-uci.svg
-
-UCI is OpenWRT's [Unified Configuration Interface][uci-wiki]. It is
-used to configure OpenWRT router hardware using a simple DSL (and
+UCI is OpenWrt's [Unified Configuration Interface][uci-wiki]. It is
+used to configure OpenWrt router hardware using a simple DSL (and
 acompanying CLI tools). Configuration files are written into a
 central directory (`/etc/config/*`) which basically represents a
 key/value store.
@@ -31,7 +28,7 @@ parser/lexer.
 
 ## Why?
 
-We're currently experimenting with Go binaries on OpenWRT router
+We're currently experimenting with Go binaries on OpenWrt router
 hardware and need a way to interact with the system configuration.
 We could have created bindings for [`libuci`][uci-git], but the
 turnaround cycle in developing with CGO is a bit tedious. Also, since
@@ -41,7 +38,7 @@ GCCGO, which has other quirks.
 The easiest solution therefore is a plain Go library, which can be
 used in Go (with or without CGO) and GCCGO without worrying about
 interoperability. A library also allows UCI to be used outside of
-OpenWRT systems (e.g. for provisioning).
+OpenWrt systems (e.g. for provisioning).
 
 [uci-git]: https://git.openwrt.org/?p=project/uci.git;a=summary
 
@@ -55,7 +52,7 @@ func main() {
     // use the default tree (/etc/config)
     if values, ok := uci.Get("system", "@system[0]", "hostname"); ok {
         fmt.Println("hostanme", values)
-        //=> hostname [OpenWRT]
+        //=> hostname [OpenWrt]
     }
 
     // use a custom tree

@@ -1,5 +1,5 @@
 /*
-Package uci implements a binding to OpenWRT's UCI (Unified Configuration
+Package uci implements a binding to OpenWrt's UCI (Unified Configuration
 Interface) files in pure Go.
 
 The typical use case is reading and modifying UCI config options:
@@ -9,7 +9,7 @@ The typical use case is reading and modifying UCI config options:
 	uci.Set("network", "lan", "ipaddr", "192.168.7.1")
 	uci.Commit() // or uci.Revert()
 
-For more details head over to the OpenWRT wiki, or dive into UCI's C
+For more details head over to the OpenWrt wiki, or dive into UCI's C
 source code:
  - https://openwrt.org/docs/guide-user/base-system/uci
  - https://git.openwrt.org/?p=project/uci.git;a=summary
