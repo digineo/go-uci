@@ -35,14 +35,6 @@ func TestWrapperConnect(t *testing.T) {
 	}
 }
 
-func TestInterface(t *testing.T) {
-	assert := assert.New(t)
-	v := &uci.SshTree{}
-	var i interface{} = v
-	_, ok := i.(uci.Tree)
-	assert.Equal(ok, true, "Interface not implemented")
-}
-
 func TestSshLoadConfig(t *testing.T) {
 	assert := assert.New(t)
 

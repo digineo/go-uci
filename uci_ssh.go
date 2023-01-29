@@ -19,6 +19,8 @@ type SshTree struct {
 	sync.Mutex
 }
 
+var _ Tree = (*SshTree)(nil)
+
 func NewSshTree(config *ssh.ClientConfig, host string) (t *SshTree, err error) {
 	t = &SshTree{
 		config: config,
