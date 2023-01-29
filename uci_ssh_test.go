@@ -77,6 +77,9 @@ func TestSshSaveConfig(t *testing.T) {
 		"42",
 	})
 	dut.Del("system", "foo", "bar")
+	dut.DelSection("system", "foo")
+	err = dut.Commit()
+	assert.Nil(err)
 
 	val, _ := dut.Get("system", "foo", "bar")
 	assert.Empty(val)
