@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/tmc/scp"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -19,7 +20,6 @@ type SshTree struct {
 }
 
 func NewSshTree(config *ssh.ClientConfig, host string) (t *SshTree, err error) {
-
 	t = &SshTree{
 		config: config,
 		host:   host,
@@ -86,19 +86,26 @@ func (t *SshTree) Commit() error {
 	}
 	return nil
 }
+
 func (t *SshTree) saveConfig(c *config) (err error) {
-	var body bytes.Buffer
-	_, err = c.WriteTo(&body)
-	path := filepath.Join(DefaultTreePath, c.Name)
-	cmd := "echo '" + body.String() + "' >> " + path
+	f, err := os.CreateTemp("", "tmpfile-")
+	defer f.Close()
+	defer os.Remove(f.Name())
+
+	if err != nil {
+		return err
+	}
+
+	_, err = c.WriteTo(f)
+	if err != nil {
+		return err
+	}
 
 	session, err := t.client.NewSession()
 	defer session.Close()
-	session.Stderr = os.Stderr
-	var reply bytes.Buffer
-	session.Stdout = &reply
+	destinationPath := filepath.Join(DefaultTreePath, c.Name)
 
-	err = session.Run(cmd)
+	err = scp.CopyPath(f.Name(), destinationPath, session)
 
 	c.tainted = false
 	return
