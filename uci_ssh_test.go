@@ -2,20 +2,35 @@ package uci_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/digineo/go-uci"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/crypto/ssh"
 )
 
 const USERNAME = "root"
 const PASSWORD = ""
-const HOST = "192.168.1.129"
+const HOST = "192.168.1.129:22"
+
+func getconfig() *ssh.ClientConfig {
+	retval := &ssh.ClientConfig{
+		User: USERNAME,
+		Auth: []ssh.AuthMethod{
+			ssh.Password(PASSWORD),
+		},
+		// Non-production only
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Timeout:         5 * time.Second,
+	}
+	return retval
+}
 
 func TestWrapperConnect(t *testing.T) {
+	conf := getconfig()
 	// ToDo: we should ship a test server!
-	dut := uci.NewSshTree(USERNAME, PASSWORD, HOST)
-	err := dut.Disonnect()
-	if err != nil {
+	dut, _ := uci.NewSshTree(conf, HOST)
+	if err := dut.Disonnect(); err != nil {
 		t.Error(err.Error())
 	}
 }
@@ -30,7 +45,8 @@ func TestInterface(t *testing.T) {
 
 func TestSshLoadConfig(t *testing.T) {
 	assert := assert.New(t)
-	dut := uci.NewSshTree(USERNAME, PASSWORD, HOST)
+
+	dut, _ := uci.NewSshTree(getconfig(), HOST)
 
 	defer dut.Disonnect()
 	err := dut.LoadConfig("system", false)
@@ -44,7 +60,7 @@ func TestSshLoadConfig(t *testing.T) {
 
 func TestSshSaveConfig(t *testing.T) {
 	assert := assert.New(t)
-	dut := uci.NewSshTree(USERNAME, PASSWORD, HOST)
+	dut, _ := uci.NewSshTree(getconfig(), HOST)
 
 	dut.LoadConfig("system", false)
 	assert.NoError(dut.AddSection("system", "foo", "foo"))

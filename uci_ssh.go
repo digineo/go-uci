@@ -6,46 +6,30 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"time"
 
 	"golang.org/x/crypto/ssh"
 )
 
 type SshTree struct {
 	host   string
-	config ssh.ClientConfig
+	config *ssh.ClientConfig
 	client *ssh.Client
 	tree
 	sync.Mutex
 }
 
-func NewSshTree(username string, password string, host string) (t *SshTree) {
-	config := &ssh.ClientConfig{
-		User: username,
-		Auth: []ssh.AuthMethod{
-			ssh.Password(password),
-		},
-		// Non-production only
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         5 * time.Second,
-	}
+func NewSshTree(config *ssh.ClientConfig, host string) (t *SshTree, err error) {
 
 	t = &SshTree{
-		config: *config,
+		config: config,
 		host:   host,
 	}
-	var err error
-	t.client, err = ssh.Dial("tcp", t.host+":"+"22", &t.config)
-	if err != nil {
-		panic(err.Error())
-	}
+	t.client, err = ssh.Dial("tcp", t.host, t.config)
 	return
 }
 
 func (t *SshTree) Disonnect() (err error) {
-
-	err = t.client.Close()
-	return err
+	return t.client.Close()
 }
 
 // Overwrite the default loadconfig!
