@@ -30,7 +30,7 @@ func TestItemTypeString(t *testing.T) {
 func TestScanTokenString(t *testing.T) {
 	assert := assert.New(t)
 	names := []string{
-		"error",
+		"errstr",
 		"eof",
 		"package",
 		"config",

@@ -233,12 +233,12 @@ func parse(name, input string) (cfg *config, err error) {
 	scan(name, input).each(func(tok token) bool {
 		switch tok.typ { //nolint:exhaustive
 		case tokError:
-			perr := ParseError(tok.items[0].val)
+			perr := ParseError{errstr: "token errstr", token: tok}
 			err = &perr
 			return false
 
 		case tokPackage:
-			err = ParseError("UCI imports/exports are not yet supported")
+			err = ParseError{errstr: "UCI imports/exports are not yet supported"}
 			return false
 
 		case tokSection:

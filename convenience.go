@@ -22,7 +22,7 @@ func Revert(configs ...string) {
 }
 
 // GetSections delegates to the default tree. See Tree for details.
-func GetSections(config, secType string) ([]string, bool) {
+func GetSections(config, secType string) ([]string, error) {
 	return defaultTree.GetSections(config, secType)
 }
 
@@ -42,7 +42,7 @@ func GetBool(config, section, option string) (bool, bool) {
 }
 
 // Set delegates to the default tree. See Tree for details.
-func Set(config, section, option string, values ...string) bool {
+func Set(config, section, option string, values ...string) error {
 	return defaultTree.Set(config, section, option, values...)
 }
 
