@@ -226,24 +226,32 @@ func TestDel(t *testing.T) {
 
 	values, _ := r.Get("system", "ntp", "enabled")
 	assert.ElementsMatch(values, []string{"1"})
-	r.Del("system", "ntp", "enabled")
+	err := r.Del("system", "ntp", "enabled")
+	assert.NoError(err)
 	values, _ = r.Get("system", "ntp", "enabled")
 	assert.ElementsMatch(values, []string{})
 
 	_, exists := r.Get("system", "nonexistent", "foo")
 	assert.False(exists)
-	r.Del("system", "nonexistent", "foo")
+	err = r.Del("system", "nonexistent", "foo")
+	assert.Error(err)
+	eerr := &ErrSectionNotFound{}
+	assert.True(errors.As(err, eerr)) // no such section
 	_, exists = r.Get("system", "nonexistent", "foo")
 	assert.False(exists)
 
 	_, exists = r.Get("nonexistent", "foo", "bar")
 	assert.False(exists)
-	r.Del("nonexistent", "foo", "bar")
+	err = r.Del("nonexistent", "foo", "bar")
+	assert.Error(err)
+	assert.True(errors.Is(err, os.ErrNotExist)) // fails as the underlying file fails to load.
 	_, exists = r.Get("nonexistent", "foo", "bar")
 	assert.False(exists)
 
 	// without prior loading
-	r.Del("nonexistent2", "foo2", "bar2")
+	err = r.Del("nonexistent2", "foo2", "bar2")
+	assert.Error(err)
+	assert.True(errors.Is(err, os.ErrNotExist)) // fails as the underlying file fails to load.
 	_, exists = r.Get("nonexistent2", "foo2", "bar2")
 	assert.False(exists)
 }
@@ -282,7 +290,8 @@ func TestListDelete(t *testing.T) {
 	val, _ := r.Get("system", "ntp", "server")
 	assert.NotEmpty(val)
 
-	r.Del("system", "ntp", "server")
+	err := r.Del("system", "ntp", "server")
+	assert.NoError(err)
 
 	val, _ = r.Get("system", "ntp", "server")
 	assert.Empty(val)
