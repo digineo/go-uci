@@ -53,7 +53,7 @@ type itemType int
 
 // These items define the UCI language.
 const (
-	itemError itemType = iota // errstr occurred; item.val is text of errstr
+	itemError itemType = iota // error occurred; item.val is text of errstr
 
 	itemBOF // begin of file; lexing starts here
 	itemEOF // end of file; lexing ends here
