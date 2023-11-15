@@ -91,9 +91,11 @@ func TestLoadConfig_forceReload(t *testing.T) {
 func TestLoadConfig_invalidFile(t *testing.T) {
 	assert := assert.New(t)
 	r := NewTree("testdata")
-
 	err := r.LoadConfig("invalid", false)
-	assert.True(IsParseError(err))
+	assert.Error(err)
+
+	var parseErr *ParseError
+	assert.True(errors.As(err, &parseErr))
 }
 
 func TestWriteConfig(t *testing.T) {

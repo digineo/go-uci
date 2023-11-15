@@ -65,7 +65,7 @@ type ParseError struct {
 }
 
 func (err ParseError) Error() string {
-	if err.token.typ == tokError {
+	if err.token.typ != scanToken(0) { // check if we got a valid token, or if it is a generic parse error
 		return fmt.Sprintf("parse errstr: %s, token: %s", err.errstr, err.token.String())
 	}
 	return fmt.Sprintf("parse errstr: %s", err.errstr)
@@ -78,8 +78,8 @@ func IsParseError(err error) bool {
 	if err == nil {
 		return false
 	}
-	is := errors.As(err, &ParseError{})
-	return is
+	perr := &ParseError{}
+	return errors.As(err, perr)
 }
 
 // ErrSectionNotFound is returned by Get

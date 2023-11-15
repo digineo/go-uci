@@ -1,6 +1,7 @@
 package uci
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,9 +30,10 @@ func TestErrSectionTypeMismatch(t *testing.T) {
 func TestParseError(t *testing.T) {
 	assert := assert.New(t)
 
-	err := ParseError{errstr: "expected foo"}
-	assert.Equal(err.Error(), "parse errstr: expected foo")
+	perr := ParseError{errstr: "expected foo"}
+	err := fmt.Errorf("parse errstr: %w", perr)
+	assert.Contains(err.Error(), "parse errstr: expected foo")
 
 	assert.False(IsParseError(nil))
-	assert.True(IsParseError(&err))
+	assert.True(IsParseError(err))
 }
