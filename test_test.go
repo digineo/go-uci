@@ -106,7 +106,7 @@ config foo
 
 const tcInvalid = `
 <?xml version="1.0">
-<error message="not a UCI file" />
+<errstr message="not a UCI file" />
 `
 
 const tcIncompletePackage = `

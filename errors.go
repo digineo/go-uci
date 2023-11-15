@@ -1,6 +1,9 @@
 package uci
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 // ErrConfigAlreadyLoaded is returned by LoadConfig, if the given config
 // name is already present.
@@ -56,10 +59,16 @@ func IsSectionTypeMismatch(err error) bool {
 	return is
 }
 
-type ParseError string
+type ParseError struct {
+	errstr string
+	token  token
+}
 
 func (err ParseError) Error() string {
-	return fmt.Sprintf("parse error: %s", string(err))
+	if err.token.typ == tokError {
+		return fmt.Sprintf("parse errstr: %s, token: %s", err.errstr, err.token.String())
+	}
+	return fmt.Sprintf("parse errstr: %s", err.errstr)
 }
 
 // IsParseError reports, whether err is of type ParseError.
@@ -69,6 +78,15 @@ func IsParseError(err error) bool {
 	if err == nil {
 		return false
 	}
-	_, is := err.(*ParseError) //nolint:errorlint
+	is := errors.As(err, &ParseError{})
 	return is
+}
+
+// ErrSectionNotFound is returned by Get
+type ErrSectionNotFound struct {
+	Section string
+}
+
+func (err ErrSectionNotFound) Error() string {
+	return fmt.Sprintf("section %s not found", err.Section)
 }

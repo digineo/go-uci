@@ -18,7 +18,7 @@ type stateFn func(*lexer) stateFn
 //
 // https://talks.golang.org/2011/lex.slide#22
 type lexer struct {
-	name  string    // used only in error reports
+	name  string    // used only in errstr reports
 	input string    // the string being scanned
 	start int       // start position of the current item
 	pos   int       // current position in the input
@@ -190,7 +190,7 @@ func isSpace(r rune) bool {
 	return r == ' ' || r == '\t'
 }
 
-// errorf returns an error token and terminates the scan by passing back
+// errorf returns an errstr token and terminates the scan by passing back
 // a nil pointer that will be the next state, terminating l.run.
 //
 // https://talks.golang.org/2011/lex.slide#37

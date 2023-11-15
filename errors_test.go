@@ -29,8 +29,8 @@ func TestErrSectionTypeMismatch(t *testing.T) {
 func TestParseError(t *testing.T) {
 	assert := assert.New(t)
 
-	err := ParseError("expected foo")
-	assert.Equal(err.Error(), "parse error: expected foo")
+	err := ParseError{errstr: "expected foo"}
+	assert.Equal(err.Error(), "parse errstr: expected foo")
 
 	assert.False(IsParseError(nil))
 	assert.True(IsParseError(&err))
