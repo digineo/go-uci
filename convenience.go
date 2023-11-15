@@ -47,8 +47,8 @@ func Set(config, section, option string, values ...string) error {
 }
 
 // Del delegates to the default tree. See Tree for details.
-func Del(config, section, option string) {
-	defaultTree.Del(config, section, option)
+func Del(config, section, option string) error {
+	return defaultTree.Del(config, section, option)
 }
 
 // AddSection delegates to the default tree. See Tree for details.
@@ -57,6 +57,6 @@ func AddSection(config, section, typ string) error {
 }
 
 // DelSection delegates to the default tree. See Tree for details.
-func DelSection(config, section string) {
-	defaultTree.DelSection(config, section)
+func DelSection(config, section string) error {
+	return defaultTree.DelSection(config, section)
 }
