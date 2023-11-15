@@ -30,13 +30,14 @@ func TestItemTypeString(t *testing.T) {
 func TestScanTokenString(t *testing.T) {
 	assert := assert.New(t)
 	names := []string{
+		"[not initialized]",
 		"error",
 		"eof",
 		"package",
 		"config",
 		"option",
 		"list",
-		"%scanToken(6)",
+		"%scanToken(7)",
 	}
 
 	for i, expected := range names {

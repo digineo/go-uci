@@ -1,6 +1,7 @@
 package uci
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -36,8 +37,9 @@ type Tree interface {
 	Revert(configs ...string)
 
 	// GetSections returns the names of all sections of a certain type
-	// in a config, and a boolean indicating whether the config file exists.
-	GetSections(config, secType string) ([]string, bool)
+	// in a config, and an error indicating whether the operation was
+	// successful.
+	GetSections(config, secType string) ([]string, error)
 
 	// Get retrieves (all) values for a fully qualified option, and a
 	// boolean indicating whether the config file and the config section
@@ -54,25 +56,14 @@ type Tree interface {
 	// interpreted as either true or false, it will return nil and false.
 	GetBool(config, section, option string) (bool, bool)
 
-	// Set replaces the fully qualified option with the given values. It
-	// returns whether the config file and section exists. For new files
-	// and sections, you first need to initialize them with AddSection().
-	//
-	// Set will determine the option type by the number of values given.
-	// In particular, it will always choose TypeOption when len(values)
-	// is 1.
-	//
-	// Deprecated: Use SetType() to control the type.
-	Set(config, section, option string, values ...string) bool
-
 	// SetType replaces the fully qualified option with the given values.
 	// It returns whether the config file and section exists. For new
 	// files and sections, you first need to initialize them with
 	// AddSection().
-	SetType(config, section, option string, typ OptionType, values ...string) bool
+	SetType(config, section, option string, typ OptionType, values ...string) error
 
 	// Del removes a fully qualified option.
-	Del(config, section, option string)
+	Del(config, section, option string) error
 
 	// AddSection adds a new config section. If the section already exists,
 	// and the types match (existing type and given type), nothing happens.
@@ -80,7 +71,7 @@ type Tree interface {
 	AddSection(config, section, typ string) error
 
 	// DelSection remove a config section and its options.
-	DelSection(config, section string)
+	DelSection(config, section string) error
 }
 
 type tree struct {
@@ -109,7 +100,7 @@ func (t *tree) LoadConfig(name string, forceReload bool) error {
 		_, exists = t.configs[name]
 	}
 	if exists && !forceReload {
-		return &ErrConfigAlreadyLoaded{name}
+		return ErrConfigAlreadyLoaded{name}
 	}
 	return t.loadConfig(name)
 }
@@ -123,7 +114,7 @@ func (t *tree) loadConfig(name string) error {
 	}
 	cfg, err := parse(name, string(body))
 	if err != nil {
-		return err
+		return fmt.Errorf("parse: %w", err)
 	}
 
 	if t.configs == nil {
@@ -160,10 +151,10 @@ func (t *tree) Revert(configs ...string) {
 	t.Unlock()
 }
 
-func (t *tree) GetSections(config string, secType string) ([]string, bool) {
-	cfg, exists := t.ensureConfigLoaded(config)
-	if !exists {
-		return nil, false
+func (t *tree) GetSections(config string, secType string) ([]string, error) {
+	cfg, err := t.ensureConfigLoaded(config)
+	if err != nil {
+		return nil, fmt.Errorf("ensureConfigLoaded: %w", err)
 	}
 
 	names := []string{}
@@ -173,7 +164,7 @@ func (t *tree) GetSections(config string, secType string) ([]string, bool) {
 		}
 	}
 
-	return names, true
+	return names, nil
 }
 
 func (t *tree) Get(config, section, option string) ([]string, bool) {
@@ -214,20 +205,20 @@ func (t *tree) GetBool(config, section, option string) (bool, bool) {
 	}
 }
 
-func (t *tree) ensureConfigLoaded(config string) (*config, bool) {
-	cfg, loaded := t.configs[config]
-	if !loaded {
+func (t *tree) ensureConfigLoaded(config string) (*config, error) {
+	cfg, ok := t.configs[config]
+	if !ok {
 		if err := t.loadConfig(config); err != nil {
-			return nil, false
+			return nil, fmt.Errorf("loadConfig: %w", err)
 		}
 		cfg = t.configs[config]
 	}
-	return cfg, true
+	return cfg, nil
 }
 
 func (t *tree) lookupOption(config, section, option string) (*option, bool) {
-	cfg, exists := t.configs[config]
-	if !exists {
+	cfg, ok := t.configs[config]
+	if !ok {
 		return nil, false
 	}
 	sec := cfg.Get(section)
@@ -248,17 +239,17 @@ func (t *tree) lookupValues(config, section, option string) ([]string, bool) {
 	return opt.Values, true
 }
 
-func (t *tree) SetType(config, section, option string, typ OptionType, values ...string) bool {
+func (t *tree) SetType(config, section, option string, typ OptionType, values ...string) error {
 	t.Lock()
 	defer t.Unlock()
 
-	cfg, ok := t.ensureConfigLoaded(config)
-	if !ok {
-		return false
+	cfg, err := t.ensureConfigLoaded(config)
+	if err != nil {
+		return fmt.Errorf("ensureConfigLoaded: %w", err)
 	}
 	sec := cfg.Get(section)
 	if sec == nil {
-		return false
+		return ErrSectionNotFound{Section: section}
 	}
 
 	if opt := sec.Get(option); opt != nil {
@@ -267,47 +258,48 @@ func (t *tree) SetType(config, section, option string, typ OptionType, values ..
 		sec.Add(newOption(option, typ, values...))
 	}
 	cfg.tainted = true
-	return true
+	return nil
 }
 
-func (t *tree) Set(config, section, option string, values ...string) bool {
-	if len(values) > 1 {
-		return t.SetType(config, section, option, TypeList, values...)
-	}
-	return t.SetType(config, section, option, TypeOption, values...)
-}
-
-func (t *tree) Del(config, section, option string) {
+func (t *tree) Del(config, section, option string) error {
 	t.Lock()
 	defer t.Unlock()
 
-	cfg, ok := t.ensureConfigLoaded(config)
-	if !ok {
-		// we want to delete option, but neither config, nor section,
-		// nor config do exist. hence, we've reached our desired state
-		return
+	cfg, err := t.ensureConfigLoaded(config)
+	if err != nil {
+		// we want to delete option but this failed
+		return fmt.Errorf("ensureConfigLoaded: %w", err)
 	}
 
 	sec := cfg.Get(section)
 	if sec == nil {
 		// same logic applies here
-		return
+		return ErrSectionNotFound{Section: section}
 	}
 
 	if sec.Del(option) {
 		cfg.tainted = true
 	}
+	return nil
 }
 
 func (t *tree) AddSection(config, section, typ string) error {
 	t.Lock()
 	defer t.Unlock()
 
-	cfg, ok := t.ensureConfigLoaded(config)
-	if !ok {
-		cfg = newConfig(config)
-		cfg.tainted = true
-		t.configs[config] = cfg
+	cfg, err := t.ensureConfigLoaded(config)
+	if err != nil {
+		if errors.Is(err, ParseError{}) {
+			return fmt.Errorf("ensureConfigLoaded: %w", err)
+		}
+		if errors.Is(err, os.ErrNotExist) {
+			// we want to add a section, but it failed to load. If this is a file not found error, we can
+			// just create a new config and add the section to it.
+			// if it is a parse error we want to return that error
+			cfg = newConfig(config)
+			cfg.tainted = true
+			t.configs[config] = cfg
+		}
 	}
 	sec := cfg.Get(section)
 	if sec == nil {
@@ -321,16 +313,17 @@ func (t *tree) AddSection(config, section, typ string) error {
 	return nil
 }
 
-func (t *tree) DelSection(config, section string) {
+func (t *tree) DelSection(config, section string) error {
 	t.Lock()
 	defer t.Unlock()
 
-	cfg, ok := t.ensureConfigLoaded(config)
-	if !ok {
-		return
+	cfg, err := t.ensureConfigLoaded(config)
+	if err != nil {
+		return fmt.Errorf("ensureConfigLoaded: %w", err)
 	}
 	cfg.Del(section)
 	cfg.tainted = true
+	return nil
 }
 
 func (t *tree) saveConfig(c *config) error {

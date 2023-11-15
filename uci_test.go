@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -81,8 +83,9 @@ func TestLoadConfig_forceReload(t *testing.T) {
 	err := r.LoadConfig("system", false)
 	assert.NoError(err)
 
+	expected := &ErrConfigAlreadyLoaded{}
 	err = r.LoadConfig("system", false)
-	assert.True(IsConfigAlreadyLoaded(err))
+	assert.True(errors.As(err, expected))
 
 	err = r.LoadConfig("system", true)
 	assert.NoError(err)
@@ -91,9 +94,11 @@ func TestLoadConfig_forceReload(t *testing.T) {
 func TestLoadConfig_invalidFile(t *testing.T) {
 	assert := assert.New(t)
 	r := NewTree("testdata")
-
 	err := r.LoadConfig("invalid", false)
-	assert.True(IsParseError(err))
+	assert.Error(err)
+
+	var parseErr *ParseError
+	assert.True(errors.As(err, &parseErr))
 }
 
 func TestWriteConfig(t *testing.T) {
@@ -114,6 +119,12 @@ func TestWriteConfig(t *testing.T) {
 			if dump["serialized"] {
 				fmt.Fprint(os.Stderr, buf.String())
 			}
+			f, err := os.Open(filepath.Join("testdata", "writeconfig."+name))
+			assert.NoError(err)
+			expectedContent, err := io.ReadAll(f)
+			assert.NoError(err)
+			assert.NoError(f.Close())
+			assert.True(bytes.Equal(buf.Bytes(), expectedContent))
 
 			// TODO: validate content of buf
 		})
@@ -125,28 +136,28 @@ func TestGetSections(t *testing.T) {
 
 	r := NewTree("testdata")
 
-	names, exists := r.GetSections("system", "system")
-	assert.True(exists)
+	names, err := r.GetSections("system", "system")
+	assert.NoError(err)
 	assert.ElementsMatch(names, []string{"@system[0]"})
 
-	names, exists = r.GetSections("system", "timeserver")
-	assert.True(exists)
+	names, err = r.GetSections("system", "timeserver")
+	assert.NoError(err)
 	assert.ElementsMatch(names, []string{"ntp"})
 
-	names, exists = r.GetSections("nonexistent", "foo")
-	assert.False(exists)
+	names, err = r.GetSections("nonexistent", "foo")
+	assert.True(errors.Is(err, os.ErrNotExist)) // fails as the underlying file fails to load.
 	assert.Nil(names)
 
-	names, exists = r.GetSections("anonymous", "anon1")
-	assert.True(exists)
+	names, err = r.GetSections("anonymous", "anon1")
+	assert.NoError(err)
 	assert.ElementsMatch(names, []string{"@anon1[0]"})
 
-	names, exists = r.GetSections("anonymous", "anon2")
-	assert.True(exists)
+	names, err = r.GetSections("anonymous", "anon2")
+	assert.NoError(err)
 	assert.ElementsMatch(names, []string{"@anon2[0]", "@anon2[1]"})
 
-	names, exists = r.GetSections("anonymous", "anon3")
-	assert.True(exists)
+	names, err = r.GetSections("anonymous", "anon3")
+	assert.NoError(err)
 	assert.ElementsMatch(names, []string{"@anon3[0]", "@anon3[1]", "@anon3[2]"})
 }
 
@@ -157,7 +168,7 @@ func TestAddSection(t *testing.T) {
 	assert.NoError(r.AddSection("nonexistent", "a", "section"))
 
 	assert.NoError(r.AddSection("system", "foo", "foo"))
-	assert.True(r.Set("system", "foo", "bar", "42"))
+	assert.NoError(r.SetType("system", "foo", "bar", TypeOption, "42"))
 	values, exists := r.Get("system", "foo", "bar")
 	assert.True(exists)
 	assert.ElementsMatch(values, []string{"42"})
@@ -166,7 +177,7 @@ func TestAddSection(t *testing.T) {
 	assert.NoError(r.AddSection("system", "foo", "foo"))
 
 	assert.NoError(r.AddSection("nonexistent", "a", "section"))
-	assert.True(r.Set("nonexistent", "a", "section", "value"))
+	assert.NoError(r.SetType("nonexistent", "a", "section", TypeOption, "value"))
 	values, exists = r.Get("nonexistent", "a", "section")
 	assert.True(exists)
 	assert.ElementsMatch(values, []string{"value"})
@@ -176,21 +187,26 @@ func TestDelSection(t *testing.T) {
 	assert := assert.New(t)
 	r := NewTree("testdata")
 
-	names, exists := r.GetSections("system", "timeserver")
-	assert.True(exists)
+	names, err := r.GetSections("system", "timeserver")
+	assert.NoError(err)
 	assert.ElementsMatch(names, []string{"ntp"})
-	r.DelSection("system", "ntp")
+	err = r.DelSection("system", "ntp")
+	assert.NoError(err)
 
-	names, exists = r.GetSections("system", "timeserver")
-	assert.True(exists)
+	names, err = r.GetSections("system", "timeserver")
+	assert.NoError(err)
 	assert.Len(names, 0)
 
-	_, exists = r.GetSections("nonexistent", "foo")
-	assert.False(exists)
-	r.DelSection("nonexistent", "@foo[0]")
-
-	_, exists = r.GetSections("nonexistent", "foo")
-	assert.False(exists)
+	_, err = r.GetSections("nonexistent", "foo")
+	assert.Error(err)
+	var fileNotFound *fs.PathError
+	assert.True(errors.As(err, &fileNotFound))
+	err = r.DelSection("nonexistent", "@foo[0]")
+	assert.Error(err)
+	assert.True(errors.As(err, &fileNotFound))
+	_, err = r.GetSections("nonexistent", "foo")
+	assert.Error(err) // Todo: specify error type
+	assert.True(errors.As(err, &fileNotFound))
 }
 
 func TestGet(t *testing.T) {
@@ -222,24 +238,32 @@ func TestDel(t *testing.T) {
 
 	values, _ := r.Get("system", "ntp", "enabled")
 	assert.ElementsMatch(values, []string{"1"})
-	r.Del("system", "ntp", "enabled")
+	err := r.Del("system", "ntp", "enabled")
+	assert.NoError(err)
 	values, _ = r.Get("system", "ntp", "enabled")
 	assert.ElementsMatch(values, []string{})
 
 	_, exists := r.Get("system", "nonexistent", "foo")
 	assert.False(exists)
-	r.Del("system", "nonexistent", "foo")
+	err = r.Del("system", "nonexistent", "foo")
+	assert.Error(err)
+	eerr := &ErrSectionNotFound{}
+	assert.True(errors.As(err, eerr)) // no such section
 	_, exists = r.Get("system", "nonexistent", "foo")
 	assert.False(exists)
 
 	_, exists = r.Get("nonexistent", "foo", "bar")
 	assert.False(exists)
-	r.Del("nonexistent", "foo", "bar")
+	err = r.Del("nonexistent", "foo", "bar")
+	assert.Error(err)
+	assert.True(errors.Is(err, os.ErrNotExist)) // fails as the underlying file fails to load.
 	_, exists = r.Get("nonexistent", "foo", "bar")
 	assert.False(exists)
 
 	// without prior loading
-	r.Del("nonexistent2", "foo2", "bar2")
+	err = r.Del("nonexistent2", "foo2", "bar2")
+	assert.Error(err)
+	assert.True(errors.Is(err, os.ErrNotExist)) // fails as the underlying file fails to load.
 	_, exists = r.Get("nonexistent2", "foo2", "bar2")
 	assert.False(exists)
 }
@@ -248,7 +272,7 @@ func TestSet(t *testing.T) {
 	assert := assert.New(t)
 	r := NewTree("testdata")
 
-	assert.True(r.Set("system", "ntp", "enabled", "0"))
+	assert.NoError(r.SetType("system", "ntp", "enabled", TypeOption, "0"))
 	values, exists := r.Get("system", "ntp", "enabled")
 	assert.True(exists)
 	assert.ElementsMatch(values, []string{"0"})
@@ -257,14 +281,14 @@ func TestSet(t *testing.T) {
 	assert.True(exists)
 	assert.ElementsMatch(values, []string{"testhost"})
 
-	assert.True(r.Set("system", "@system[0]", "hosttest"))
+	assert.NoError(r.SetType("system", "@system[0]", "hosttest", TypeOption))
 
-	assert.False(r.Set("system", "nonexistent", "foo", "bar"))
+	assert.Error(r.SetType("system", "nonexistent", "foo", TypeOption, "bar"))
 	values, exists = r.Get("system", "nonexistent", "foo")
 	assert.False(exists)
 	assert.Nil(values)
 
-	assert.False(r.Set("nonexistent", "foo", "bar", "42"))
+	assert.Error(r.SetType("nonexistent", "foo", "bar", TypeOption, "42"))
 	values, exists = r.Get("nonexistent", "foo", "bar")
 	assert.False(exists)
 	assert.Nil(values)
@@ -278,7 +302,8 @@ func TestListDelete(t *testing.T) {
 	val, _ := r.Get("system", "ntp", "server")
 	assert.NotEmpty(val)
 
-	r.Del("system", "ntp", "server")
+	err := r.Del("system", "ntp", "server")
+	assert.NoError(err)
 
 	val, _ = r.Get("system", "ntp", "server")
 	assert.Empty(val)
@@ -351,7 +376,7 @@ func TestRevert(t *testing.T) {
 	assert.Len(tree.configs, 1)
 
 	// taint tree
-	assert.True(r.Set("system", "ntp", "foo", "42"))
+	assert.NoError(r.SetType("system", "ntp", "foo", TypeOption, "42"))
 	assert.True(tree.configs["system"].tainted)
 	r.Revert("system")
 	assert.Len(tree.configs, 0)
@@ -371,7 +396,7 @@ func TestCommit(t *testing.T) {
 
 	// taint the tree
 	assert.NoError(r.AddSection("cfgname", "secname", "sectype"))
-	assert.True(r.Set("cfgname", "secname", "optname", "optvalue"))
+	assert.NoError(r.SetType("cfgname", "secname", "optname", TypeOption, "optvalue"))
 	const content = "\nconfig sectype 'secname'\n\toption optname 'optvalue'\n\n"
 
 	// try saving, but let it fail at different points

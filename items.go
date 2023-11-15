@@ -124,7 +124,7 @@ type scanFn func(*scanner) scanFn
 type scanToken int
 
 const (
-	tokError scanToken = iota
+	tokError scanToken = iota + 1
 	tokEOF
 
 	tokPackage // item-seq: (package, string)
@@ -147,7 +147,10 @@ func (t scanToken) String() string {
 		return "option"
 	case tokList:
 		return "list"
+	case scanToken(0):
+		return "[not initialized]"
 	}
+
 	return fmt.Sprintf("%%scanToken(%d)", int(t))
 }
 

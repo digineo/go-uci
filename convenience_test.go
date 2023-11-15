@@ -30,9 +30,9 @@ func (m *mockTree) Revert(configs ...string) {
 	m.Called(configs)
 }
 
-func (m *mockTree) GetSections(config string, secType string) ([]string, bool) {
+func (m *mockTree) GetSections(config string, secType string) ([]string, error) {
 	args := m.Called(config, secType)
-	return []string{args.String(0)}, args.Bool(1)
+	return []string{args.String(0)}, args.Error(1)
 }
 
 func (m *mockTree) Get(config, section, option string) ([]string, bool) {
@@ -50,18 +50,14 @@ func (m *mockTree) GetBool(config, section, option string) (bool, bool) {
 	return args.Bool(0), args.Bool(1)
 }
 
-func (m *mockTree) Set(config, section, option string, values ...string) bool {
-	args := m.Called(config, section, option, values)
-	return args.Bool(0)
-}
-
-func (m *mockTree) SetType(config, section, option string, typ OptionType, values ...string) bool {
+func (m *mockTree) SetType(config, section, option string, typ OptionType, values ...string) error {
 	args := m.Called(config, section, option, typ, values)
-	return args.Bool(0)
+	return args.Error(0)
 }
 
-func (m *mockTree) Del(config, section, option string) {
+func (m *mockTree) Del(config, section, option string) error {
 	m.Called(config, section, option)
+	return nil
 }
 
 func (m *mockTree) AddSection(config, section, typ string) error {
@@ -69,8 +65,9 @@ func (m *mockTree) AddSection(config, section, typ string) error {
 	return args.Error(0)
 }
 
-func (m *mockTree) DelSection(config, section string) {
+func (m *mockTree) DelSection(config, section string) error {
 	m.Called(config, section)
+	return nil
 }
 
 func TestMain(m *testing.M) {
@@ -84,7 +81,8 @@ func TestConvenienceLoadConfig(t *testing.T) {
 	m.On("LoadConfig", "foo", true).Return(nil)
 	m.On("LoadConfig", "bar", false).Return(io.ErrUnexpectedEOF)
 	assert.NoError(LoadConfig("foo", true))
-	assert.Error(LoadConfig("bar", false))
+	err := LoadConfig("bar", false)
+	assert.Error(err, io.ErrUnexpectedEOF)
 	m.AssertExpectations(t)
 }
 
@@ -106,9 +104,9 @@ func TestConvenienceRevert(t *testing.T) {
 func TestConvenienceGetSections(t *testing.T) {
 	assert := assert.New(t)
 	m := defaultTree.(*mockTree)
-	m.On("GetSections", "foo", "bar").Return("sec1", true)
-	list, ok := GetSections("foo", "bar")
-	assert.True(ok)
+	m.On("GetSections", "foo", "bar").Return("sec1", nil)
+	list, err := GetSections("foo", "bar")
+	assert.NoError(err)
 	assert.EqualValues([]string{"sec1"}, list)
 	m.AssertExpectations(t)
 }
@@ -143,29 +141,23 @@ func TestConvenienceGetBool(t *testing.T) {
 	m.AssertExpectations(t)
 }
 
-func TestConvenienceSet(t *testing.T) {
-	assert := assert.New(t)
-	m := defaultTree.(*mockTree)
-	m.On("Set", "foo", "bar", "valid", []string{"42"}).Return(true)
-	m.On("Set", "foo", "bar", "invalid", []string(nil)).Return(false)
-	assert.False(Set("foo", "bar", "invalid"))
-	assert.True(Set("foo", "bar", "valid", "42"))
-	m.AssertExpectations(t)
-}
-
 func TestConvenienceDel(t *testing.T) {
 	m := defaultTree.(*mockTree)
 	m.On("Del", "foo", "bar", "opt").Return()
-	Del("foo", "bar", "opt")
+	err := Del("foo", "bar", "opt")
+	assert.NoError(t, err)
 	m.AssertExpectations(t)
 }
 
 func TestConvenienceAddSection(t *testing.T) {
 	assert := assert.New(t)
 	m := defaultTree.(*mockTree)
+	addSectionErr := errors.New("invalid")
 	m.On("AddSection", "foo", "bar", "system").Return(nil)
-	m.On("AddSection", "foo", "bar", "interface").Return(errors.New("invalid")) //nolint:goerr113
-	assert.Error(AddSection("foo", "bar", "interface"))
+	m.On("AddSection", "foo", "bar", "interface").Return(addSectionErr) //nolint:goerr113
+	err := AddSection("foo", "bar", "interface")
+	assert.Error(err)
+	assert.EqualError(err, addSectionErr.Error())
 	assert.NoError(AddSection("foo", "bar", "system"))
 	m.AssertExpectations(t)
 }
@@ -173,6 +165,7 @@ func TestConvenienceAddSection(t *testing.T) {
 func TestConvenienceDelSection(t *testing.T) {
 	m := defaultTree.(*mockTree)
 	m.On("DelSection", "foo", "bar").Return()
-	DelSection("foo", "bar")
+	err := DelSection("foo", "bar")
+	assert.NoError(t, err)
 	m.AssertExpectations(t)
 }
