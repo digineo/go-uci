@@ -190,7 +190,7 @@ func isSpace(r rune) bool {
 	return r == ' ' || r == '\t'
 }
 
-// errorf returns an errstr token and terminates the scan by passing back
+// errorf returns an error token and terminates the scan by passing back
 // a nil pointer that will be the next state, terminating l.run.
 //
 // https://talks.golang.org/2011/lex.slide#37

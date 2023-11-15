@@ -53,7 +53,7 @@ type itemType int
 
 // These items define the UCI language.
 const (
-	itemError itemType = iota // error occurred; item.val is text of errstr
+	itemError itemType = iota // error occurred; item.val is text of error
 
 	itemBOF // begin of file; lexing starts here
 	itemEOF // end of file; lexing ends here
@@ -138,7 +138,7 @@ func (t scanToken) String() string {
 	case tokEOF:
 		return "eof"
 	case tokError:
-		return "errstr"
+		return "error"
 	case tokPackage:
 		return "package"
 	case tokSection:

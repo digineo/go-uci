@@ -31,8 +31,8 @@ func TestParseError(t *testing.T) {
 	assert := assert.New(t)
 
 	perr := ParseError{errstr: "expected foo"}
-	err := fmt.Errorf("parse errstr: %w", perr)
-	assert.Contains(err.Error(), "parse errstr: expected foo")
+	err := fmt.Errorf("parse error: %w", perr)
+	assert.Contains(err.Error(), "parse error: expected foo")
 
 	assert.False(IsParseError(nil))
 	assert.True(IsParseError(err))

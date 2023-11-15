@@ -66,9 +66,9 @@ type ParseError struct {
 
 func (err ParseError) Error() string {
 	if err.token.typ != scanToken(0) { // check if we got a valid token, or if it is a generic parse error
-		return fmt.Sprintf("parse errstr: %s, token: %s", err.errstr, err.token.String())
+		return fmt.Sprintf("parse error: %s, token: %s", err.errstr, err.token.String())
 	}
-	return fmt.Sprintf("parse errstr: %s", err.errstr)
+	return fmt.Sprintf("parse error: %s", err.errstr)
 }
 
 // IsParseError reports, whether err is of type ParseError.

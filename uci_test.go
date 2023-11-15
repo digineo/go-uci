@@ -25,7 +25,7 @@ func loadExpected(t *testing.T, name string) *config {
 	expected := &config{}
 	err = json.NewDecoder(f).Decode(&expected)
 	if err != nil {
-		t.Fatalf("errstr decoding json: %v", err)
+		t.Fatalf("error decoding json: %v", err)
 	}
 
 	// The JSON dump does not contain empty slices (they're marked with

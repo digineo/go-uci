@@ -31,7 +31,7 @@ func TestScanTokenString(t *testing.T) {
 	assert := assert.New(t)
 	names := []string{
 		"[not initialized]",
-		"errstr",
+		"error",
 		"eof",
 		"package",
 		"config",
