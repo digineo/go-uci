@@ -62,7 +62,7 @@ func (c *config) WriteTo(w io.Writer) (n int64, err error) {
 // Support for unnamed section notation (@foo[idx]) is present.
 func (c *config) Get(name string) *section {
 	if strings.HasPrefix(name, "@") {
-		sec, _ := c.getUnnamed(name) // TODO: log errstr?
+		sec, _ := c.getUnnamed(name) // TODO: log error?
 		return sec
 	}
 	return c.getNamed(name)

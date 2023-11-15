@@ -16,7 +16,7 @@ import (
 // functions with the same signature as in this interface).
 type Tree interface {
 	// LoadConfig reads a config file into memory and returns nil. If the
-	// config is already loaded, and forceReload is false, an errstr of type
+	// config is already loaded, and forceReload is false, an error of type
 	// ErrConfigAlreadyLoaded is returned. Errors reading the config file
 	// are returned verbatim.
 	//
@@ -38,7 +38,7 @@ type Tree interface {
 	Revert(configs ...string)
 
 	// GetSections returns the names of all sections of a certain type
-	// in a config, and an errstr indicating whether the operation was
+	// in a config, and an error indicating whether the operation was
 	// successful.
 	GetSections(config, secType string) ([]string, error)
 
@@ -319,9 +319,9 @@ func (t *tree) AddSection(config, section, typ string) error {
 			return fmt.Errorf("ensureConfigLoaded: %w", err)
 		}
 		if errors.Is(err, os.ErrNotExist) {
-			// we want to add a section, but it failed to load. If this is a file not found errstr, we can
+			// we want to add a section, but it failed to load. If this is a file not found error, we can
 			// just create a new config and add the section to it.
-			// if it is a parse errstr we want to return that errstr
+			// if it is a parse error we want to return that error
 			cfg = newConfig(config)
 			cfg.tainted = true
 			t.configs[config] = cfg

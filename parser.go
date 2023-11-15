@@ -233,7 +233,7 @@ func parse(name, input string) (cfg *config, err error) {
 	scan(name, input).each(func(tok token) bool {
 		switch tok.typ { //nolint:exhaustive
 		case tokError:
-			perr := ParseError{errstr: "token errstr", token: tok}
+			perr := ParseError{errstr: "token error", token: tok}
 			err = &perr
 			return false
 
