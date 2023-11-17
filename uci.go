@@ -3,7 +3,6 @@ package uci
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sync"
@@ -118,7 +117,7 @@ func (t *tree) LoadConfig(name string, forceReload bool) error {
 // loadConfig actually reads a config file. Its call must be guarded by
 // locking the tree's mutex.
 func (t *tree) loadConfig(name string) error {
-	body, err := ioutil.ReadFile(filepath.Join(t.dir, name))
+	body, err := os.ReadFile(filepath.Join(t.dir, name))
 	if err != nil {
 		return fmt.Errorf("reading config file failed: %w", err)
 	}
@@ -359,7 +358,7 @@ func (t *tree) saveConfig(c *config) error {
 		return err
 	}
 
-	if err = f.Chmod(0644); err != nil {
+	if err = f.Chmod(0o644); err != nil {
 		f.Close()
 		_ = f.Remove()
 		return fmt.Errorf("save: failed to set permissions: %w", err)
@@ -391,7 +390,7 @@ type tmpFile interface {
 
 // newTmpFile purely exists to be replaced in tests.
 var newTmpFile = func(dir, pattern string) (tmpFile, error) {
-	f, err := ioutil.TempFile(dir, pattern)
+	f, err := os.CreateTemp(dir, pattern)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp file: %w", err)
 	}
