@@ -1,12 +1,19 @@
 # go-uci
 
 > **WORK IN PROGRESS**
+>
+> You're looking at the pre-release documentation for
+> the next major **v2** version.
+>
+> Some things aren't properly flushed out yet and may
+> break at any moment. Use at your own peril.
 
+<!-- TODO: re-enable with v2 import path.
 [![GoDoc](https://pkg.go.dev/badge/github.com/digineo/go-uci.svg)](https://pkg.go.dev/github.com/digineo/go-uci)
 [![Test results](https://github.com/digineo/go-uci/workflows/Test/badge.svg)](https://github.com/digineo/go-uci/actions?query=workflow%3ATest)
 [![Lint results](https://github.com/digineo/go-uci/workflows/Lint/badge.svg)](https://github.com/digineo/go-uci/actions?query=workflow%3ALint)
 [![Codecov](http://codecov.io/github/digineo/go-uci/coverage.svg?branch=master)](http://codecov.io/github/digineo/go-uci?branch=master)
-
+-->
 
 UCI is OpenWrt's [Unified Configuration Interface][uci-wiki]. It is
 used to configure OpenWrt router hardware using a simple DSL (and
@@ -44,6 +51,8 @@ OpenWrt systems (e.g. for provisioning).
 
 
 ## Usage
+
+> TODO: update example
 
 ```go
 import "github.com/digineo/go-uci"
