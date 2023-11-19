@@ -132,7 +132,7 @@ var ErrUnnamedIndexOutOfBounds = errors.New("invalid name: index out of bounds")
 func (c *config) getUnnamed(name string) (*section, error) {
 	typ, idx, err := unmangleSectionName(name)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unmangleSectionName: %w", err)
 	}
 
 	count := c.count(typ)
