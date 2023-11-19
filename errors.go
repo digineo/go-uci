@@ -1,7 +1,6 @@
 package uci
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -24,17 +23,6 @@ func (err ErrUnknownOptionType) Error() string {
 	return fmt.Sprintf("Unknown Option type %s", err.Type)
 }
 
-// IsConfigAlreadyLoaded reports, whether err is of type ErrConfigAlredyLoaded.
-//
-// Deprecated: use errors.Is or errors.As.
-func IsConfigAlreadyLoaded(err error) bool {
-	if err == nil {
-		return false
-	}
-	_, is := err.(*ErrConfigAlreadyLoaded) //nolint:errorlint
-	return is
-}
-
 // ErrSectionTypeMismatch is returned by AddSection if the section-to-add
 // already exists with a different type.
 type ErrSectionTypeMismatch struct {
@@ -48,17 +36,6 @@ func (err ErrSectionTypeMismatch) Error() string {
 		err.Config, err.Section, err.ExistingType, err.NewType)
 }
 
-// IsSectionTypeMismatch reports, whether err is of type ErrSectionTypeMismatch.
-//
-// Deprecated: use errors.Is or errors.As.
-func IsSectionTypeMismatch(err error) bool {
-	if err == nil {
-		return false
-	}
-	_, is := err.(*ErrSectionTypeMismatch) //nolint:errorlint
-	return is
-}
-
 type ParseError struct {
 	errstr string
 	token  token
@@ -69,17 +46,6 @@ func (err ParseError) Error() string {
 		return fmt.Sprintf("parse error: %s, token: %s", err.errstr, err.token.String())
 	}
 	return fmt.Sprintf("parse error: %s", err.errstr)
-}
-
-// IsParseError reports, whether err is of type ParseError.
-//
-// Deprecated: use errors.Is or errors.As.
-func IsParseError(err error) bool {
-	if err == nil {
-		return false
-	}
-	perr := &ParseError{}
-	return errors.As(err, perr)
 }
 
 // ErrSectionNotFound is returned by Get

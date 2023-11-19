@@ -41,11 +41,6 @@ func GetBool(config, section, option string) (bool, bool) {
 	return defaultTree.GetBool(config, section, option)
 }
 
-// Set delegates to the default tree. See Tree for details.
-func Set(config, section, option string, values ...string) error {
-	return defaultTree.Set(config, section, option, values...)
-}
-
 // Del delegates to the default tree. See Tree for details.
 func Del(config, section, option string) error {
 	return defaultTree.Del(config, section, option)
