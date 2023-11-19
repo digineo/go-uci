@@ -56,17 +56,6 @@ type Tree interface {
 	// interpreted as either true or false, it will return nil and false.
 	GetBool(config, section, option string) (bool, bool)
 
-	// Set replaces the fully qualified option with the given values. It
-	// returns whether the config file and section exists. For new files
-	// and sections, you first need to initialize them with AddSection().
-	//
-	// Set will determine the option type by the number of values given.
-	// In particular, it will always choose TypeOption when len(values)
-	// is 1.
-	//
-	// Deprecated: Use SetType() to control the type.
-	Set(config, section, option string, values ...string) error
-
 	// SetType replaces the fully qualified option with the given values.
 	// It returns whether the config file and section exists. For new
 	// files and sections, you first need to initialize them with
@@ -111,7 +100,7 @@ func (t *tree) LoadConfig(name string, forceReload bool) error {
 		_, exists = t.configs[name]
 	}
 	if exists && !forceReload {
-		return &ErrConfigAlreadyLoaded{name}
+		return ErrConfigAlreadyLoaded{name}
 	}
 	return t.loadConfig(name)
 }
