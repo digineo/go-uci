@@ -31,7 +31,6 @@ func (m *mockTree) Revert(configs ...string) {
 }
 
 func (m *mockTree) GetSections(config string, secType string) ([]string, error) {
-	// Todo: verify error case
 	args := m.Called(config, secType)
 	return []string{args.String(0)}, args.Error(1)
 }
@@ -51,20 +50,12 @@ func (m *mockTree) GetBool(config, section, option string) (bool, bool) {
 	return args.Bool(0), args.Bool(1)
 }
 
-func (m *mockTree) Set(config, section, option string, values ...string) error {
-	// Todo: verify error case
-	args := m.Called(config, section, option, values)
-	return args.Error(0)
-}
-
 func (m *mockTree) SetType(config, section, option string, typ OptionType, values ...string) error {
-	// Todo: verify error case
 	args := m.Called(config, section, option, typ, values)
 	return args.Error(0)
 }
 
 func (m *mockTree) Del(config, section, option string) error {
-	// Todo: test error case
 	m.Called(config, section, option)
 	return nil
 }
@@ -75,7 +66,6 @@ func (m *mockTree) AddSection(config, section, typ string) error {
 }
 
 func (m *mockTree) DelSection(config, section string) error {
-	// Todo: test error case
 	m.Called(config, section)
 	return nil
 }
@@ -148,16 +138,6 @@ func TestConvenienceGetBool(t *testing.T) {
 	value, ok := GetBool("foo", "bar", "opt")
 	assert.True(ok)
 	assert.True(value)
-	m.AssertExpectations(t)
-}
-
-func TestConvenienceSet(t *testing.T) {
-	assert := assert.New(t)
-	m := defaultTree.(*mockTree)
-	m.On("Set", "foo", "bar", "valid", []string{"42"}).Return(nil)
-	m.On("Set", "foo", "bar", "invalid", []string(nil)).Return(errors.New("invalid"))
-	assert.Error(Set("foo", "bar", "invalid"))
-	assert.NoError(Set("foo", "bar", "valid", "42"))
 	m.AssertExpectations(t)
 }
 
