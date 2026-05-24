@@ -65,6 +65,11 @@ func (m *mockTree) AddSection(config, section, typ string) error {
 	return args.Error(0)
 }
 
+func (m *mockTree) AddAnonymousSection(config, typ string) error {
+	args := m.Called(config, typ)
+	return args.Error(0)
+}
+
 func (m *mockTree) DelSection(config, section string) error {
 	m.Called(config, section)
 	return nil

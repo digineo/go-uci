@@ -70,6 +70,9 @@ type Tree interface {
 	// Otherwise an ErrSectionTypeMismatch is returned.
 	AddSection(config, section, typ string) error
 
+	// AddAnonymousSection adds a new anonymous section.
+	AddAnonymousSection(config, typ string) error
+
 	// DelSection remove a config section and its options.
 	DelSection(config, section string) error
 }
@@ -283,23 +286,33 @@ func (t *tree) Del(config, section, option string) error {
 	return nil
 }
 
-func (t *tree) AddSection(config, section, typ string) error {
-	t.Lock()
-	defer t.Unlock()
-
-	cfg, err := t.ensureConfigLoaded(config)
+// getOrCreateConfig loads the named config, or creates a new empty one if the
+// file doesn't exist yet. Must be called with t.Lock held.
+func (t *tree) getOrCreateConfig(name string) (*config, error) {
+	cfg, err := t.ensureConfigLoaded(name)
 	if err != nil {
 		if errors.Is(err, ParseError{}) {
-			return fmt.Errorf("ensureConfigLoaded: %w", err)
+			return nil, fmt.Errorf("ensureConfigLoaded: %w", err)
 		}
 		if errors.Is(err, os.ErrNotExist) {
 			// we want to add a section, but it failed to load. If this is a file not found error, we can
 			// just create a new config and add the section to it.
 			// if it is a parse error we want to return that error
-			cfg = newConfig(config)
+			cfg = newConfig(name)
 			cfg.tainted = true
-			t.configs[config] = cfg
+			t.configs[name] = cfg
 		}
+	}
+	return cfg, nil
+}
+
+func (t *tree) AddSection(config, section, typ string) error {
+	t.Lock()
+	defer t.Unlock()
+
+	cfg, err := t.getOrCreateConfig(config)
+	if err != nil {
+		return err
 	}
 	sec := cfg.Get(section)
 	if sec == nil {
@@ -310,6 +323,19 @@ func (t *tree) AddSection(config, section, typ string) error {
 	if sec.Type != typ {
 		return ErrSectionTypeMismatch{config, section, sec.Type, typ}
 	}
+	return nil
+}
+
+func (t *tree) AddAnonymousSection(config, typ string) error {
+	t.Lock()
+	defer t.Unlock()
+
+	cfg, err := t.getOrCreateConfig(config)
+	if err != nil {
+		return err
+	}
+	cfg.Add(newSection(typ, ""))
+	cfg.tainted = true
 	return nil
 }
 

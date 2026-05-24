@@ -183,6 +183,35 @@ func TestAddSection(t *testing.T) {
 	assert.ElementsMatch(values, []string{"value"})
 }
 
+func TestAddAnonymousSection(t *testing.T) {
+	assert := assert.New(t)
+	r := NewTree("testdata")
+
+	assert.NoError(r.AddAnonymousSection("anonymous", "anon1"))
+	names, err := r.GetSections("anonymous", "anon1")
+	assert.NoError(err)
+	assert.Len(names, 2)
+	assert.ElementsMatch(names, []string{"@anon1[0]", "@anon1[1]"})
+
+	assert.NoError(r.AddAnonymousSection("anonymous", "anon2"))
+	assert.NoError(r.AddAnonymousSection("anonymous", "anon2"))
+	names, err = r.GetSections("anonymous", "anon2")
+	assert.NoError(err)
+	assert.Len(names, 4)
+
+	assert.NoError(r.AddAnonymousSection("anonymous", "newtype"))
+	assert.NoError(r.SetType("anonymous", "@newtype[0]", "key", TypeOption, "val"))
+	values, exists := r.Get("anonymous", "@newtype[0]", "key")
+	assert.True(exists)
+	assert.ElementsMatch(values, []string{"val"})
+
+	assert.NoError(r.AddAnonymousSection("nonexistent", "newtype"))
+	assert.NoError(r.SetType("nonexistent", "@newtype[0]", "key", TypeOption, "val"))
+	values, exists = r.Get("nonexistent", "@newtype[0]", "key")
+	assert.True(exists)
+	assert.ElementsMatch(values, []string{"val"})
+}
+
 func TestDelSection(t *testing.T) {
 	assert := assert.New(t)
 	r := NewTree("testdata")
@@ -205,8 +234,7 @@ func TestDelSection(t *testing.T) {
 	assert.Error(err)
 	assert.True(errors.As(err, &fileNotFound))
 	_, err = r.GetSections("nonexistent", "foo")
-	assert.Error(err) // Todo: specify error type
-	assert.True(errors.As(err, &fileNotFound))
+	assert.ErrorAs(err, &fileNotFound)
 }
 
 func TestGet(t *testing.T) {
