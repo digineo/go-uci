@@ -1,4 +1,4 @@
-module github.com/nikitagricanuk/go-uci/v2
+module github.com/nikitagricanuk/go-uci
 
 go 1.21
 
