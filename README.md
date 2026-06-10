@@ -17,7 +17,7 @@
 
 UCI is OpenWrt's [Unified Configuration Interface][uci-wiki]. It is
 used to configure OpenWrt router hardware using a simple DSL (and
-acompanying CLI tools). Configuration files are written into a
+accompanying CLI tools). Configuration files are written into a
 central directory (`/etc/config/*`) which basically represents a
 key/value store.
 
@@ -60,7 +60,7 @@ import "github.com/digineo/go-uci"
 func main() {
     // use the default tree (/etc/config)
     if values, ok := uci.Get("system", "@system[0]", "hostname"); ok {
-        fmt.Println("hostanme", values)
+        fmt.Println("hostname", values)
         //=> hostname [OpenWrt]
     }
 
