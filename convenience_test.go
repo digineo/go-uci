@@ -35,6 +35,14 @@ func (m *mockTree) GetSections(config string, secType string) ([]string, error) 
 	return []string{args.String(0)}, args.Error(1)
 }
 
+func (m *mockTree) GetSectionOptions(config string, section string) ([]SectionOption, error) {
+	args := m.Called(config, section)
+	return []SectionOption{{
+		Name: args.String(0),
+		Type: OptionType(args.Int(1)),
+	}}, args.Error(2)
+}
+
 func (m *mockTree) Get(config, section, option string) ([]string, bool) {
 	args := m.Called(config, section, option)
 	return []string{args.String(0)}, args.Bool(1)
@@ -113,6 +121,16 @@ func TestConvenienceGetSections(t *testing.T) {
 	list, err := GetSections("foo", "bar")
 	assert.NoError(err)
 	assert.EqualValues([]string{"sec1"}, list)
+	m.AssertExpectations(t)
+}
+
+func TestConvenienceGetSectionOptions(t *testing.T) {
+	assert := assert.New(t)
+	m := defaultTree.(*mockTree)
+	m.On("GetSectionOptions", "foo", "bar").Return("opt1", 1, nil)
+	list, err := GetSectionOptions("foo", "bar")
+	assert.NoError(err)
+	assert.EqualValues([]SectionOption{{Name: "opt1", Type: TypeList}}, list)
 	m.AssertExpectations(t)
 }
 

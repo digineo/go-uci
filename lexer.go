@@ -171,7 +171,11 @@ func (l *lexer) acceptComment() {
 func (l *lexer) acceptIdent() {
 	for {
 		r := l.next()
-		if !(r == '-' || r == '_' || 'a' <= r && r <= 'z' || 'A' <= r && r <= 'Z' || '0' <= r && r <= '9') {
+		if r != '-' &&
+			r != '_' &&
+			(r < 'a' || r > 'z') &&
+			(r < 'A' || r > 'Z') &&
+			(r < '0' || r > '9') {
 			l.backup()
 			break
 		}
@@ -273,10 +277,10 @@ func lexConfigType(l *lexer) stateFn {
 }
 
 func lexOptionalName(l *lexer) stateFn {
-	switch r := l.next(); {
-	case r == '\n':
+	switch l.next() {
+	case '\n':
 		l.ignore()
-	case r == '"' || r == '\'':
+	case '"', '\'':
 		l.backup()
 		return lexQuoted
 	default:

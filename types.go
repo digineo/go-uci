@@ -228,6 +228,15 @@ func (c *config) count(typ string) (n int) {
 	return
 }
 
+// SectionOption describes a configuration option available in a section.
+// It provides metadata about an option (name and type) without its current value.
+//
+// Use [Tree.GetSectionOptions] to list all available options for a section.
+type SectionOption struct {
+	Name string     `json:"name,omitempty"` // Option name/key
+	Type OptionType `json:"type,omitempty"` // Expected data type
+}
+
 // A section represents a group of options in UCI. It may be named or
 // unnamed. In the latter case, its synthetic name is constructed from
 // the section type and index (e.g. "@system[0]").

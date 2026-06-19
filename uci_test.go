@@ -22,7 +22,9 @@ func loadExpected(t *testing.T, name string) *config {
 	if err != nil {
 		t.Fatalf("cannot open %s.json: %v", name, err)
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 
 	expected := &config{}
 	err = json.NewDecoder(f).Decode(&expected)
@@ -159,6 +161,37 @@ func TestGetSections(t *testing.T) {
 	names, err = r.GetSections("anonymous", "anon3")
 	assert.NoError(err)
 	assert.ElementsMatch(names, []string{"@anon3[0]", "@anon3[1]", "@anon3[2]"})
+}
+
+func TestGetSectionOptions(t *testing.T) {
+	assert := assert.New(t)
+
+	r := NewTree("testdata")
+
+	options, err := r.GetSectionOptions("ucitrack", "@firewall[0]")
+	assert.NoError(err)
+	assert.ElementsMatch(options, []SectionOption{
+		{
+			Name: "init",
+			Type: TypeOption,
+		},
+		{
+			Name: "affects",
+			Type: TypeList,
+		},
+	})
+
+	options, err = r.GetSectionOptions("anonymous", "@firewall[0]")
+	assert.ErrorAs(err, &ErrSectionNotFound{})
+	assert.Len(options, 0)
+
+	options, err = r.GetSectionOptions("anonymous", "@anon1[0]")
+	assert.NoError(err)
+	assert.Len(options, 0)
+
+	options, err = r.GetSectionOptions("nonexistent", "@foo[0]")
+	assert.ErrorIs(err, os.ErrNotExist) // fails as the underlying file fails to load.
+	assert.Nil(options)
 }
 
 func TestAddSection(t *testing.T) {
@@ -488,7 +521,7 @@ func TestCommit(t *testing.T) {
 
 	// try saving, but let it fail at different points
 	reset := func(onwrite, onchmod, onsync, onrename error) {
-		m.Buffer.Reset()
+		m.Buffer.Reset() //nolint:staticcheck
 		m.ExpectedCalls = nil
 		m.On("Close").Return(nil)
 		m.On("Remove").Return(nil)
@@ -500,7 +533,7 @@ func TestCommit(t *testing.T) {
 
 	reset(errors.New("fail write"), nil, nil, nil) //nolint:goerr113
 	assert.EqualError(r.Commit(), "fail write")
-	assert.Equal(0, m.Buffer.Len())
+	assert.Equal(0, m.Buffer.Len()) //nolint:staticcheck
 
 	reset(nil, errors.New("fail chmod"), nil, nil) //nolint:goerr113
 	assert.EqualError(r.Commit(), "save: failed to set permissions: fail chmod")

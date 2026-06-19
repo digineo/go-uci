@@ -41,6 +41,17 @@ type Tree interface {
 	// successful.
 	GetSections(config, secType string) ([]string, error)
 
+	// GetSectionOptions returns metadata for all configuration options
+	// available in the specified section.
+	//
+	// The returned slice contains option names and their expected types,
+	// but not current values.
+	//
+	// Returns an error if:
+	//   - the config was not loaded into the tree;
+	//   - the section doesn't exist.
+	GetSectionOptions(config string, section string) ([]SectionOption, error)
+
 	// Get retrieves (all) values for a fully qualified option, and a
 	// boolean indicating whether the config file and the config section
 	// within exists.
@@ -155,12 +166,15 @@ func (t *tree) Revert(configs ...string) {
 }
 
 func (t *tree) GetSections(config string, secType string) ([]string, error) {
+	t.Lock()
+	defer t.Unlock()
+
 	cfg, err := t.ensureConfigLoaded(config)
 	if err != nil {
 		return nil, fmt.Errorf("ensureConfigLoaded: %w", err)
 	}
 
-	names := []string{}
+	names := make([]string, 0, len(cfg.Sections))
 	for _, s := range cfg.Sections {
 		if s.Type == secType {
 			names = append(names, cfg.sectionName(s))
@@ -168,6 +182,31 @@ func (t *tree) GetSections(config string, secType string) ([]string, error) {
 	}
 
 	return names, nil
+}
+
+func (t *tree) GetSectionOptions(config string, section string) ([]SectionOption, error) {
+	t.Lock()
+	defer t.Unlock()
+
+	cfg, err := t.ensureConfigLoaded(config)
+	if err != nil {
+		return nil, fmt.Errorf("ensureConfigLoaded: %w", err)
+	}
+
+	cfgSection := cfg.Get(section)
+	if cfgSection == nil {
+		return nil, ErrSectionNotFound{section}
+	}
+
+	options := make([]SectionOption, 0, len(cfgSection.Options))
+	for _, opt := range cfgSection.Options {
+		options = append(options, SectionOption{
+			Name: opt.Name,
+			Type: opt.Type,
+		})
+	}
+
+	return options, nil
 }
 
 func (t *tree) Get(config, section, option string) ([]string, bool) {
@@ -372,22 +411,22 @@ func (t *tree) saveConfig(c *config) error {
 
 	_, err = c.WriteTo(f)
 	if err != nil {
-		f.Close()
+		_ = f.Close()
 		_ = f.Remove()
 		return err
 	}
 
 	if err = f.Chmod(0o644); err != nil {
-		f.Close()
+		_ = f.Close()
 		_ = f.Remove()
 		return fmt.Errorf("save: failed to set permissions: %w", err)
 	}
 	if err = f.Sync(); err != nil {
-		f.Close()
+		_ = f.Close()
 		_ = f.Remove()
 		return fmt.Errorf("save: failed to sync: %w", err)
 	}
-	f.Close()
+	_ = f.Close()
 
 	if err = f.Rename(filepath.Join(t.dir, c.Name)); err != nil {
 		return fmt.Errorf("save: failed to replace existing config: %w", err)
@@ -420,6 +459,6 @@ type tmpFileImpl struct{ *os.File }
 
 func (tmp *tmpFileImpl) Chmod(mode os.FileMode) error { return tmp.File.Chmod(mode) }
 func (tmp *tmpFileImpl) Close() error                 { return tmp.File.Close() }
-func (tmp *tmpFileImpl) Remove() error                { return os.Remove(tmp.File.Name()) }
-func (tmp *tmpFileImpl) Rename(newpath string) error  { return os.Rename(tmp.File.Name(), newpath) }
+func (tmp *tmpFileImpl) Remove() error                { return os.Remove(tmp.File.Name()) }          //nolint:staticcheck
+func (tmp *tmpFileImpl) Rename(newpath string) error  { return os.Rename(tmp.File.Name(), newpath) } //nolint:staticcheck
 func (tmp *tmpFileImpl) Sync() error                  { return tmp.File.Sync() }
