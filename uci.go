@@ -350,22 +350,25 @@ func (t *tree) saveConfig(c *config) error {
 
 	_, err = c.WriteTo(f)
 	if err != nil {
-		f.Close()
+		_ = f.Close() // the earlier error takes precedence
 		_ = f.Remove()
 		return err
 	}
 
 	if err = f.Chmod(0o644); err != nil {
-		f.Close()
+		_ = f.Close() // the earlier error takes precedence
 		_ = f.Remove()
 		return fmt.Errorf("save: failed to set permissions: %w", err)
 	}
 	if err = f.Sync(); err != nil {
-		f.Close()
+		_ = f.Close() // the earlier error takes precedence
 		_ = f.Remove()
 		return fmt.Errorf("save: failed to sync: %w", err)
 	}
-	f.Close()
+	if err = f.Close(); err != nil {
+		_ = f.Remove()
+		return fmt.Errorf("save: failed to close: %w", err)
+	}
 
 	if err = f.Rename(filepath.Join(t.dir, c.Name)); err != nil {
 		return fmt.Errorf("save: failed to replace existing config: %w", err)
@@ -398,6 +401,6 @@ type tmpFileImpl struct{ *os.File }
 
 func (tmp *tmpFileImpl) Chmod(mode os.FileMode) error { return tmp.File.Chmod(mode) }
 func (tmp *tmpFileImpl) Close() error                 { return tmp.File.Close() }
-func (tmp *tmpFileImpl) Remove() error                { return os.Remove(tmp.File.Name()) }
-func (tmp *tmpFileImpl) Rename(newpath string) error  { return os.Rename(tmp.File.Name(), newpath) }
+func (tmp *tmpFileImpl) Remove() error                { return os.Remove(tmp.Name()) }
+func (tmp *tmpFileImpl) Rename(newpath string) error  { return os.Rename(tmp.Name(), newpath) }
 func (tmp *tmpFileImpl) Sync() error                  { return tmp.File.Sync() }

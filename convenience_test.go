@@ -159,7 +159,7 @@ func TestConvenienceAddSection(t *testing.T) {
 	m := defaultTree.(*mockTree)
 	addSectionErr := errors.New("invalid")
 	m.On("AddSection", "foo", "bar", "system").Return(nil)
-	m.On("AddSection", "foo", "bar", "interface").Return(addSectionErr) //nolint:goerr113
+	m.On("AddSection", "foo", "bar", "interface").Return(addSectionErr)
 	err := AddSection("foo", "bar", "interface")
 	assert.Error(err)
 	assert.EqualError(err, addSectionErr.Error())

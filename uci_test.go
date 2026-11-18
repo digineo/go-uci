@@ -23,7 +23,7 @@ func loadExpected(t *testing.T, name string) *config {
 	if err != nil {
 		t.Fatalf("cannot open %s.json: %v", name, err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }() // read-only, close errors don't matter
 
 	expected := &config{}
 	err = json.NewDecoder(f).Decode(&expected)
@@ -488,10 +488,11 @@ func TestCommit(t *testing.T) {
 	const content = "\nconfig sectype 'secname'\n\toption optname 'optvalue'\n\n"
 
 	// try saving, but let it fail at different points
-	reset := func(onwrite, onchmod, onsync, onrename error) {
-		m.Buffer.Reset()
+	reset := func(onwrite, onchmod, onsync, onclose, onrename error) {
+		m.Reset()
 		m.ExpectedCalls = nil
-		m.On("Close").Return(nil)
+		m.Calls = nil
+		m.On("Close").Return(onclose)
 		m.On("Remove").Return(nil)
 		m.On("Write", mock.AnythingOfType("[]uint8")).Return(onwrite)
 		m.On("Chmod", os.FileMode(0644)).Return(onchmod)
@@ -499,21 +500,26 @@ func TestCommit(t *testing.T) {
 		m.On("Rename", "testdata/cfgname").Return(onrename)
 	}
 
-	reset(errors.New("fail write"), nil, nil, nil) //nolint:goerr113
+	reset(errors.New("fail write"), nil, nil, nil, nil)
 	assert.EqualError(r.Commit(), "fail write")
-	assert.Equal(0, m.Buffer.Len())
+	assert.Equal(0, m.Len())
 
-	reset(nil, errors.New("fail chmod"), nil, nil) //nolint:goerr113
+	reset(nil, errors.New("fail chmod"), nil, nil, nil)
 	assert.EqualError(r.Commit(), "save: failed to set permissions: fail chmod")
 	assert.EqualValues(content, m.Buffer.String())
 
-	reset(nil, nil, errors.New("fail sync"), nil) //nolint:goerr113
+	reset(nil, nil, errors.New("fail sync"), nil, nil)
 	assert.EqualError(r.Commit(), "save: failed to sync: fail sync")
 
-	reset(nil, nil, nil, errors.New("fail rename")) //nolint:goerr113
+	reset(nil, nil, nil, errors.New("fail close"), nil)
+	assert.EqualError(r.Commit(), "save: failed to close: fail close")
+	m.AssertNotCalled(t, "Rename", "testdata/cfgname")
+	m.AssertCalled(t, "Remove")
+
+	reset(nil, nil, nil, nil, errors.New("fail rename"))
 	assert.EqualError(r.Commit(), "save: failed to replace existing config: fail rename")
 
-	reset(nil, nil, nil, nil)
+	reset(nil, nil, nil, nil, nil)
 	assert.NoError(r.Commit())
 }
 
