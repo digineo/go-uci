@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -553,4 +554,107 @@ func (m *mockTempFile) Rename(newpath string) error {
 func (m *mockTempFile) Sync() error {
 	args := m.Called()
 	return args.Error(0)
+}
+
+func writeTestConfig(t *testing.T, dir, name, content string) {
+	t.Helper()
+	if err := os.WriteFile(filepath.Join(dir, name), []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestAddSection_afterRevertAll(t *testing.T) {
+	r := NewTree(t.TempDir())
+	r.Revert()
+
+	assert.NoError(t, r.AddSection("new", "sec", "typ"))
+	assert.NoError(t, r.AddAnonymousSection("new", "typ"))
+}
+
+func TestAddSection_invalidFile(t *testing.T) {
+	dir := t.TempDir()
+	writeTestConfig(t, dir, "bad", "not a uci file\n")
+	r := NewTree(dir)
+
+	var parseErr *ParseError
+	assert.ErrorAs(t, r.AddSection("bad", "sec", "typ"), &parseErr)
+	assert.ErrorAs(t, r.AddAnonymousSection("bad", "typ"), &parseErr)
+}
+
+func TestAddSection_unreadableFile(t *testing.T) {
+	dir := t.TempDir()
+	assert.NoError(t, os.Mkdir(filepath.Join(dir, "isdir"), 0o755))
+	r := NewTree(dir)
+
+	assert.Error(t, r.AddSection("isdir", "sec", "typ"))
+	assert.Error(t, r.AddAnonymousSection("isdir", "typ"))
+}
+
+func TestLoadConfig_packageKeyword(t *testing.T) {
+	dir := t.TempDir()
+	writeTestConfig(t, dir, "pkg", "package 'foo'\n")
+	r := NewTree(dir)
+
+	var parseErr *ParseError
+	assert.ErrorAs(t, r.LoadConfig("pkg", false), &parseErr)
+}
+
+func TestGet_missingSectionKeepsChanges(t *testing.T) {
+	dir := t.TempDir()
+	writeTestConfig(t, dir, "cfg", "config typ 'sec'\n\toption opt 'old'\n")
+	r := NewTree(dir)
+
+	assert.NoError(t, r.SetType("cfg", "sec", "opt", TypeOption, "new"))
+
+	_, ok := r.Get("cfg", "nonexistent", "opt")
+	assert.False(t, ok)
+
+	val, ok := r.GetLast("cfg", "sec", "opt")
+	assert.True(t, ok)
+	assert.Equal(t, "new", val)
+}
+
+func TestGetSections_concurrent(t *testing.T) {
+	dir := t.TempDir()
+	writeTestConfig(t, dir, "cfg", "config typ 'sec'\n")
+	r := NewTree(dir)
+
+	var wg sync.WaitGroup
+	for i := 0; i < 10; i++ {
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			_, err := r.GetSections("cfg", "typ")
+			assert.NoError(t, err)
+		}()
+		go func() {
+			defer wg.Done()
+			assert.NoError(t, r.AddAnonymousSection("cfg", "typ"))
+		}()
+	}
+	wg.Wait()
+
+	names, err := r.GetSections("cfg", "typ")
+	assert.NoError(t, err)
+	assert.Len(t, names, 11)
+}
+
+func TestDelSection_notFoundKeepsUntainted(t *testing.T) {
+	r := NewTree("testdata")
+
+	assert.NoError(t, r.DelSection("system", "nonexistent"))
+	assert.False(t, r.(*tree).configs["system"].tainted)
+}
+
+func TestCommit_optionWithoutValues(t *testing.T) {
+	dir := t.TempDir()
+	r := NewTree(dir)
+	assert.NoError(t, r.AddSection("cfg", "sec", "typ"))
+	assert.NoError(t, r.SetType("cfg", "sec", "opt", TypeOption))
+	assert.NoError(t, r.SetType("cfg", "sec", "lst", TypeList))
+	assert.NoError(t, r.Commit())
+
+	content, err := os.ReadFile(filepath.Join(dir, "cfg"))
+	assert.NoError(t, err)
+	assert.Equal(t, "\nconfig typ 'sec'\n\n", string(content))
 }

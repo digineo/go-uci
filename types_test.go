@@ -236,3 +236,11 @@ func TestConfigGet(t *testing.T) { //nolint:funlen
 		}
 	}
 }
+
+func TestParse_emptySectionNameIsAnonymous(t *testing.T) {
+	cfg, err := parse("cfg", "config foo ''\n\toption a 'b'\nconfig foo ''\n")
+	assert.NoError(t, err)
+	assert.Len(t, cfg.Sections, 2)
+	assert.Equal(t, "@foo[0]", cfg.sectionName(cfg.Sections[0]))
+	assert.Equal(t, "@foo[1]", cfg.sectionName(cfg.Sections[1]))
+}

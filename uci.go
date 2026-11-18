@@ -98,11 +98,7 @@ func (t *tree) LoadConfig(name string, forceReload bool) error {
 	t.Lock()
 	defer t.Unlock()
 
-	var exists bool
-	if t.configs != nil {
-		_, exists = t.configs[name]
-	}
-	if exists && !forceReload {
+	if _, exists := t.configs[name]; exists && !forceReload {
 		return ErrConfigAlreadyLoaded{name}
 	}
 	return t.loadConfig(name)
@@ -118,10 +114,6 @@ func (t *tree) loadConfig(name string) error {
 	cfg, err := parse(name, string(body))
 	if err != nil {
 		return fmt.Errorf("parse: %w", err)
-	}
-
-	if t.configs == nil {
-		t.configs = make(map[string]*config)
 	}
 	t.configs[name] = cfg
 	return nil
@@ -145,16 +137,21 @@ func (t *tree) Commit() error {
 
 func (t *tree) Revert(configs ...string) {
 	t.Lock()
+	defer t.Unlock()
+
 	if len(configs) == 0 {
-		t.configs = nil
+		t.configs = make(map[string]*config)
+		return
 	}
 	for _, config := range configs {
 		delete(t.configs, config)
 	}
-	t.Unlock()
 }
 
 func (t *tree) GetSections(config string, secType string) ([]string, error) {
+	t.Lock()
+	defer t.Unlock()
+
 	cfg, err := t.ensureConfigLoaded(config)
 	if err != nil {
 		return nil, fmt.Errorf("ensureConfigLoaded: %w", err)
@@ -174,14 +171,18 @@ func (t *tree) Get(config, section, option string) ([]string, bool) {
 	t.Lock()
 	defer t.Unlock()
 
-	if vals, ok := t.lookupValues(config, section, option); ok {
-		return vals, true
-	}
-
-	if err := t.loadConfig(config); err != nil {
+	cfg, err := t.ensureConfigLoaded(config)
+	if err != nil {
 		return nil, false
 	}
-	return t.lookupValues(config, section, option)
+	sec := cfg.Get(section)
+	if sec == nil {
+		return nil, false
+	}
+	if opt := sec.Get(option); opt != nil {
+		return opt.Values, true
+	}
+	return nil, true
 }
 
 func (t *tree) GetLast(config, section, option string) (string, bool) {
@@ -217,29 +218,6 @@ func (t *tree) ensureConfigLoaded(config string) (*config, error) {
 		cfg = t.configs[config]
 	}
 	return cfg, nil
-}
-
-func (t *tree) lookupOption(config, section, option string) (*option, bool) {
-	cfg, ok := t.configs[config]
-	if !ok {
-		return nil, false
-	}
-	sec := cfg.Get(section)
-	if sec == nil {
-		return nil, false
-	}
-	return sec.Get(option), true
-}
-
-func (t *tree) lookupValues(config, section, option string) ([]string, bool) {
-	opt, ok := t.lookupOption(config, section, option)
-	if !ok {
-		return nil, false
-	}
-	if opt == nil {
-		return nil, true
-	}
-	return opt.Values, true
 }
 
 func (t *tree) SetType(config, section, option string, typ OptionType, values ...string) error {
@@ -290,19 +268,18 @@ func (t *tree) Del(config, section, option string) error {
 // file doesn't exist yet. Must be called with t.Lock held.
 func (t *tree) getOrCreateConfig(name string) (*config, error) {
 	cfg, err := t.ensureConfigLoaded(name)
-	if err != nil {
-		if errors.Is(err, ParseError{}) {
-			return nil, fmt.Errorf("ensureConfigLoaded: %w", err)
-		}
-		if errors.Is(err, os.ErrNotExist) {
-			// we want to add a section, but it failed to load. If this is a file not found error, we can
-			// just create a new config and add the section to it.
-			// if it is a parse error we want to return that error
-			cfg = newConfig(name)
-			cfg.tainted = true
-			t.configs[name] = cfg
-		}
+	if err == nil {
+		return cfg, nil
 	}
+	// Only a missing file means "new config". Any other error (parse
+	// errors, permissions, ...) must not be papered over, otherwise the
+	// next Commit would overwrite the existing file.
+	if !errors.Is(err, os.ErrNotExist) {
+		return nil, fmt.Errorf("ensureConfigLoaded: %w", err)
+	}
+	cfg = newConfig(name)
+	cfg.tainted = true
+	t.configs[name] = cfg
 	return cfg, nil
 }
 
@@ -347,8 +324,9 @@ func (t *tree) DelSection(config, section string) error {
 	if err != nil {
 		return fmt.Errorf("ensureConfigLoaded: %w", err)
 	}
-	cfg.Del(section)
-	cfg.tainted = true
+	if cfg.Del(section) {
+		cfg.tainted = true
+	}
 	return nil
 }
 

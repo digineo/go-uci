@@ -43,6 +43,9 @@ func (c *config) WriteTo(w io.Writer) (n int64, err error) {
 		}
 
 		for _, opt := range sec.Options {
+			if len(opt.Values) == 0 {
+				continue // UCI has no syntax for an option without value
+			}
 			switch opt.Type {
 			case TypeOption:
 				fmt.Fprintf(&buf, "\toption %s '%s'\n", opt.Name, opt.Values[0])
@@ -180,7 +183,9 @@ func (c *config) Merge(s *section) *section {
 	return sec
 }
 
-func (c *config) Del(name string) {
+// Del removes a section by name (supporting the @type[idx] notation). It
+// returns whether the section actually existed.
+func (c *config) Del(name string) bool {
 	// Resolve the section to a pointer, handling both named sections and the
 	// anonymous "@type[index]" selector syntax.
 	var target *section
@@ -190,14 +195,15 @@ func (c *config) Del(name string) {
 		target = c.getNamed(name)
 	}
 	if target == nil {
-		return
+		return false
 	}
 	for i, s := range c.Sections {
 		if s == target {
 			c.Sections = append(c.Sections[:i], c.Sections[i+1:]...)
-			return
+			return true
 		}
 	}
+	return false
 }
 
 func (c *config) sectionName(s *section) string {

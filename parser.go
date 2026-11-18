@@ -233,17 +233,17 @@ func parse(name, input string) (cfg *config, err error) {
 	scan(name, input).each(func(tok token) bool {
 		switch tok.typ { //nolint:exhaustive
 		case tokError:
-			perr := ParseError{errstr: "token error", token: tok}
-			err = &perr
+			err = &ParseError{errstr: "token error", token: tok}
 			return false
 
 		case tokPackage:
-			err = ParseError{errstr: "UCI imports/exports are not yet supported"}
+			err = &ParseError{errstr: "UCI imports/exports are not yet supported"}
 			return false
 
 		case tokSection:
 			name := tok.items[0].val
-			if len(tok.items) == 2 {
+			// like libuci, treat an empty name as anonymous section
+			if len(tok.items) == 2 && tok.items[1].val != "" {
 				sec = cfg.Merge(newSection(name, tok.items[1].val))
 			} else {
 				sec = cfg.Add(newSection(name, ""))
