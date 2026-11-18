@@ -92,14 +92,6 @@ func (l *lexer) emit(t itemType) {
 	}
 }
 
-// emitString emits a string token. it removes the surrounding quotes.
-func (l *lexer) emitString(t itemType) {
-	if l.pos-1 >= l.start+1 {
-		l.items <- item{t, l.input[l.start+1 : l.pos-1], l.pos}
-		l.start = l.pos
-	}
-}
-
 // next returns the next rune in the input
 //
 // https://talks.golang.org/2011/lex.slide#31
@@ -132,17 +124,6 @@ func (l *lexer) peek() rune {
 	r := l.next()
 	l.backup()
 	return r
-}
-
-// accept consumes the next rune if it's from the valid set.
-//
-// https://talks.golang.org/2011/lex.slide#34
-func (l *lexer) accept(valid string) bool {
-	if strings.ContainsRune(valid, l.next()) {
-		return true
-	}
-	l.backup()
-	return false
 }
 
 // acceptRun consumes a run of runes from the valid set.
@@ -253,7 +234,7 @@ func lexPackageName(l *lexer) stateFn {
 			l.ignore()
 		case r == '\'' || r == '"':
 			l.backup()
-			return lexQuoted
+			return lexValue
 		}
 	}
 }
@@ -278,7 +259,7 @@ func lexOptionalName(l *lexer) stateFn {
 		l.ignore()
 	case r == '"' || r == '\'':
 		l.backup()
-		return lexQuoted
+		return lexValue
 	default:
 		l.acceptIdent()
 		l.emit(itemString)
@@ -307,58 +288,69 @@ func lexOptionName(l *lexer) stateFn {
 	return lexValue
 }
 
+// lexValue scans a string value, following the quoting rules of libuci:
+// A value consists of adjacent parts which are concatenated. Single-quoted
+// parts are taken literally. In double-quoted and unquoted parts, a
+// backslash escapes the next character, and a backslash before a line
+// break continues the value on the next line. Example (yields "it's"):
+//
+//	'it'\''s'
 func lexValue(l *lexer) stateFn {
-	if r := l.peek(); r == '"' || r == '\'' {
-		return lexQuoted
-	}
-	return lexUnquoted
-}
-
-// lexQuote scans a quoted string.
-func lexQuoted(l *lexer) stateFn {
-	q := l.next()
-	if q != '"' && q != '\'' {
-		return l.errorf("expected quotation")
-	}
-
-Loop:
+	var sb strings.Builder
 	for {
-		switch l.next() {
-		case '\\':
-			if r := l.next(); r != eof {
-				break // switch
+		switch r := l.next(); r {
+		case '\'', '"':
+			if !l.scanQuoted(&sb, r) {
+				return l.errorf("unterminated quoted string")
 			}
-			fallthrough
-		case eof, '\n':
-			return l.errorf("unterminated quoted string")
-		case q:
-			break Loop
+		case '\\':
+			if !l.scanEscaped(&sb) {
+				return l.errorf("unterminated unquoted string")
+			}
+		case eof, ' ', '\t', '\n', '#':
+			l.backup()
+			if l.pos > l.start {
+				l.items <- item{itemString, sb.String(), l.pos}
+				l.start = l.pos
+			}
+			l.consumeWhitespace()
+			return lexKeyword
+		default:
+			sb.WriteRune(r)
 		}
 	}
-	l.emitString(itemString)
-	l.consumeWhitespace()
-	return lexKeyword
 }
 
-func lexUnquoted(l *lexer) stateFn {
-Loop:
+// scanQuoted consumes a quoted part (after the opening quote q) up to and
+// including the closing quote, and writes its content to sb. It returns
+// false if the input ends before the closing quote.
+func (l *lexer) scanQuoted(sb *strings.Builder, q rune) bool {
 	for {
-		switch l.next() {
-		case '\\':
-			if r := l.next(); r != eof {
-				break
+		switch r := l.next(); {
+		case r == eof:
+			return false
+		case r == q:
+			return true
+		case r == '\\' && q == '"':
+			if !l.scanEscaped(sb) {
+				return false
 			}
-			fallthrough
-		case eof:
-			return l.errorf("unterminated unquoted string")
-		case ' ', '\t', '#', '\n':
-			break Loop
+		default:
+			sb.WriteRune(r)
 		}
 	}
-	l.backup()
-	l.emit(itemString)
-	l.consumeWhitespace()
-	l.accept("\n")
-	l.ignore()
-	return lexKeyword
+}
+
+// scanEscaped consumes the character following a backslash and writes it
+// to sb. An escaped line break is dropped. It returns false at eof.
+func (l *lexer) scanEscaped(sb *strings.Builder) bool {
+	switch r := l.next(); r {
+	case eof:
+		return false
+	case '\n':
+		return true
+	default:
+		sb.WriteRune(r)
+		return true
+	}
 }

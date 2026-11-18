@@ -39,7 +39,7 @@ func (c *config) WriteTo(w io.Writer) (n int64, err error) {
 		if sec.Name == "" {
 			fmt.Fprintf(&buf, "\nconfig %s\n", sec.Type)
 		} else {
-			fmt.Fprintf(&buf, "\nconfig %s '%s'\n", sec.Type, sec.Name)
+			fmt.Fprintf(&buf, "\nconfig %s %s\n", sec.Type, quote(sec.Name))
 		}
 
 		for _, opt := range sec.Options {
@@ -48,16 +48,25 @@ func (c *config) WriteTo(w io.Writer) (n int64, err error) {
 			}
 			switch opt.Type {
 			case TypeOption:
-				fmt.Fprintf(&buf, "\toption %s '%s'\n", opt.Name, opt.Values[0])
+				fmt.Fprintf(&buf, "\toption %s %s\n", opt.Name, quote(opt.Values[0]))
 			case TypeList:
 				for _, v := range opt.Values {
-					fmt.Fprintf(&buf, "\tlist %s '%s'\n", opt.Name, v)
+					fmt.Fprintf(&buf, "\tlist %s %s\n", opt.Name, quote(v))
 				}
 			}
 		}
 	}
 	buf.WriteByte('\n')
 	return buf.WriteTo(w)
+}
+
+// quote wraps s in single quotes, the same way "uci export" does. Since
+// single-quoted strings can't contain single quotes, these are written as
+// end quote, escaped quote, start quote:
+//
+//	'\
+func quote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
 }
 
 // Get fetches a section by name.

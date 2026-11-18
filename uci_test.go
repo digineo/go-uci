@@ -646,6 +646,40 @@ func TestDelSection_notFoundKeepsUntainted(t *testing.T) {
 	assert.False(t, r.(*tree).configs["system"].tainted)
 }
 
+func TestCommit_roundtrip(t *testing.T) {
+	values := []string{
+		"plain",
+		"it's",
+		"''",
+		`back\slash`,
+		`"double"`,
+		"with # hash",
+		"multi\nline",
+		"",
+	}
+
+	dir := t.TempDir()
+	r := NewTree(dir)
+	assert.NoError(t, r.AddSection("cfg", "it's a name", "typ"))
+	for i, v := range values {
+		opt := fmt.Sprintf("opt%d", i)
+		assert.NoError(t, r.SetType("cfg", "it's a name", opt, TypeOption, v))
+	}
+	assert.NoError(t, r.SetType("cfg", "it's a name", "lst", TypeList, values...))
+	assert.NoError(t, r.Commit())
+
+	r2 := NewTree(dir)
+	for i, v := range values {
+		opt := fmt.Sprintf("opt%d", i)
+		got, ok := r2.GetLast("cfg", "it's a name", opt)
+		assert.True(t, ok, opt)
+		assert.Equal(t, v, got, opt)
+	}
+	got, ok := r2.Get("cfg", "it's a name", "lst")
+	assert.True(t, ok)
+	assert.Equal(t, values, got)
+}
+
 func TestCommit_optionWithoutValues(t *testing.T) {
 	dir := t.TempDir()
 	r := NewTree(dir)

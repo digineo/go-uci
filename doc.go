@@ -41,12 +41,23 @@ The UCI grammar (for the purpose of this library) is defined as follows:
 			[_a-zA-Z0-9]+
 
 	value
-			`'` STRING `'`
-			`"` STRING `"`
-			ident
+			part+
+
+	part
+			`'` [^']* `'`
+			`"` ([^"\] | `\` ANY)* `"`
+			([^'"\ \t\n#] | `\` ANY)+
+
+Like in libuci, adjacent parts are concatenated without separator.
+Single-quoted parts are taken literally, while a backslash escapes the
+next character in double-quoted and unquoted parts (a backslash before a
+line break continues the value on the next line). When writing configs,
+values are single-quoted, and contained single quotes are written as
+end quote, escaped quote, start quote:
+
+	option name 'it'\''s'
 
 For now, UCI imports/exports (packageDecl production) are not supported
-yet. The STRING token (value production) is also somewhat vaguely
-defined, and needs to be aligned with the actual C implementation.
+yet.
 */
 package uci

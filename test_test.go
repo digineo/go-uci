@@ -117,10 +117,24 @@ const tcUnterminatedQuoted = `
 config foo "bar
 `
 
-const tcUnterminatedUnquoted = `
-config foo
-	option opt opt\
-`
+const tcUnterminatedUnquoted = "\nconfig foo\n\toption opt opt\\"
+
+const tcUnterminatedEscape = "\nconfig foo\n\toption opt \"opt\\"
+
+// tcQuoting covers libuci's quoting rules: adjacent parts are
+// concatenated, single quotes are literal, double-quoted and unquoted
+// parts resolve backslash escapes, a backslash before a line break
+// continues the value. The last value has no trailing newline.
+const tcQuoting = `config foo 'it'\''s'
+	option sq 'lit\eral'
+	option dq "say \"hi\""
+	option uq back\ slash
+	option concat 'a'"b"c
+	option cont foo\
+bar
+	option ml 'line1
+line2'
+	option eof last`
 
 const tcEmptyStringOption = `config foo 'bar'
 	option nonempty 'value'
@@ -197,6 +211,20 @@ var lexerTests = []struct {
 	{"unterminated unquoted string", tcUnterminatedUnquoted, []item{
 		itemConfig.mk("config"), itemIdent.mk("foo"), // unnamed
 		itemOption.mk("option"), itemIdent.mk("opt"), itemError.mk("unterminated unquoted string"),
+	}},
+	{"unterminated escape in quoted string", tcUnterminatedEscape, []item{
+		itemConfig.mk("config"), itemIdent.mk("foo"), // unnamed
+		itemOption.mk("option"), itemIdent.mk("opt"), itemError.mk("unterminated quoted string"),
+	}},
+	{"quoting", tcQuoting, []item{
+		itemConfig.mk("config"), itemIdent.mk("foo"), itemString.mk("it's"),
+		itemOption.mk("option"), itemIdent.mk("sq"), itemString.mk(`lit\eral`),
+		itemOption.mk("option"), itemIdent.mk("dq"), itemString.mk(`say "hi"`),
+		itemOption.mk("option"), itemIdent.mk("uq"), itemString.mk("back slash"),
+		itemOption.mk("option"), itemIdent.mk("concat"), itemString.mk("abc"),
+		itemOption.mk("option"), itemIdent.mk("cont"), itemString.mk("foobar"),
+		itemOption.mk("option"), itemIdent.mk("ml"), itemString.mk("line1\nline2"),
+		itemOption.mk("option"), itemIdent.mk("eof"), itemString.mk("last"),
 	}},
 	{"empty string option", tcEmptyStringOption, []item{
 		itemConfig.mk("config"), itemIdent.mk("foo"), itemString.mk("bar"),
