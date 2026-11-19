@@ -13,7 +13,7 @@ import (
 type scanner struct {
 	lexer  *lexer
 	state  scanFn
-	last   *item  // last item read from the lexer, but deffered by the state
+	last   *item  // last item read from the lexer, but deferred by the state
 	curr   []item // accepted items
 	tokens chan token
 }
