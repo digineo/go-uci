@@ -264,7 +264,7 @@ func parse(name, input string) (cfg *config, err error) {
 			val := tok.items[1].val
 
 			if opt := sec.Get(name); opt != nil {
-				opt.MergeValues(val)
+				opt.AddValue(val)
 			} else {
 				sec.Add(newOption(name, TypeList, val))
 			}
